@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelance Music - Connect Teachers & Students</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="resources/styles/index.css" rel="stylesheet">
+    <!-- Chart.js for reports -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 0;
+        }
+        .feature-card {
+            transition: transform 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .role-card {
+            min-height: 300px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        .role-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+        .hidden {
+            display: none !important;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        .booking-card {
+            border-left: 4px solid #667eea;
+        }
+        .teacher-card {
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .teacher-card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        .availability-slot {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .availability-slot:hover {
+            background: #667eea;
+            color: white;
+        }
+        .availability-slot.selected {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="#" onclick="showHomePage()">
+                    <i class="bi bi-music-note-beamed"></i> Freelance Music
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showHomePage()">Home</a>
+                        </li>
+                        <li class="nav-item" id="adminNav" style="display: none;">
+                            <a class="nav-link" href="#" onclick="showAdminDashboard()">Admin Dashboard</a>
+                        </li>
+                        <li class="nav-item" id="teacherNav" style="display: none;">
+                            <a class="nav-link" href="#" onclick="showTeacherDashboard()">Teacher Dashboard</a>
+                        </li>
+                        <li class="nav-item" id="studentNav" style="display: none;">
+                            <a class="nav-link" href="#" onclick="showStudentDashboard()">Student Dashboard</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item" id="loginNav">
+                            <a class="nav-link" href="#" onclick="showLoginPage()">Login</a>
+                        </li>
+                        <li class="nav-item" id="registerNav">
+                            <a class="nav-link" href="#" onclick="showRegisterPage()">Register</a>
+                        </li>
+                        <li class="nav-item" id="userNav" style="display: none;">
+                            <div class="dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <span id="userName">User</span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="logout()">Logout</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Home Page -->
+        <div id="homePage">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-lg-6">
+                            <h1 class="display-4 fw-bold mb-4">Connect with Music</h1>
+                            <p class="lead mb-4">Freelance Music connects talented music teachers with eager students. Book lessons, learn instruments, and share your passion for music.</p>
+                            <div class="d-flex gap-3">
+                                <button class="btn btn-light btn-lg" onclick="showRegisterPage()">Get Started</button>
+                                <button class="btn btn-outline-light btn-lg" onclick="showLoginPage()">Login</button>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="text-center">
+                                <i class="bi bi-music-note-beamed" style="font-size: 8rem; opacity: 0.3;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section class="py-5">
+                <div class="container">
+                    <div class="row text-center mb-5">
+                        <div class="col-12">
+                            <h2 class="display-5 fw-bold">How It Works</h2>
+                            <p class="lead text-muted">Simple steps to start your musical journey</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-person-plus-fill text-primary" style="font-size: 3rem;"></i>
+                                    <h5 class="card-title mt-3">Create Profile</h5>
+                                    <p class="card-text">Teachers create profiles showcasing their expertise. Students create profiles to find the perfect match.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-calendar-check-fill text-success" style="font-size: 3rem;"></i>
+                                    <h5 class="card-title mt-3">Schedule Lessons</h5>
+                                    <p class="card-text">Teachers post available times. Students browse and book lessons that fit their schedule.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-credit-card-fill text-warning" style="font-size: 3rem;"></i>
+                                    <h5 class="card-title mt-3">Secure Payment</h5>
+                                    <p class="card-text">Safe and secure payment processing. Teachers get paid, students get quality lessons.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Role Selection -->
+            <section class="py-5 bg-light">
+                <div class="container">
+                    <div class="row text-center mb-5">
+                        <div class="col-12">
+                            <h2 class="display-5 fw-bold">Choose Your Role</h2>
+                            <p class="lead text-muted">Join as a teacher, student, or explore as a guest</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card role-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-person-badge-fill text-primary" style="font-size: 4rem;"></i>
+                                    <h4 class="card-title mt-3">Teacher</h4>
+                                    <p class="card-text">Share your musical expertise and earn money by teaching students.</p>
+                                    <ul class="list-unstyled text-start">
+                                        <li><i class="bi bi-check-circle text-success"></i> Create detailed profiles</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Set your rates</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Manage availability</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Track earnings</li>
+                                    </ul>
+                                    <button class="btn btn-primary" onclick="showRegisterPage('Teacher')">Become a Teacher</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card role-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-person-heart text-success" style="font-size: 4rem;"></i>
+                                    <h4 class="card-title mt-3">Student</h4>
+                                    <p class="card-text">Learn from experienced teachers and improve your musical skills.</p>
+                                    <ul class="list-unstyled text-start">
+                                        <li><i class="bi bi-check-circle text-success"></i> Browse teachers</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Book lessons</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Track progress</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Secure payments</li>
+                                    </ul>
+                                    <button class="btn btn-success" onclick="showRegisterPage('Student')">Become a Student</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card role-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-search text-info" style="font-size: 4rem;"></i>
+                                    <h4 class="card-title mt-3">Browse</h4>
+                                    <p class="card-text">Explore teachers and instruments without creating an account.</p>
+                                    <ul class="list-unstyled text-start">
+                                        <li><i class="bi bi-check-circle text-success"></i> View teacher profiles</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> See available lessons</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Compare rates</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Read reviews</li>
+                                    </ul>
+                                    <button class="btn btn-info" onclick="showBrowsePage()">Browse Teachers</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Login Page -->
+        <div id="loginPage" class="hidden">
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <h3 class="card-title text-center mb-4">Login</h3>
+                                <form id="loginForm">
+                                    <div class="mb-3">
+                                        <label for="loginUsername" class="form-label">Username</label>
+                                        <input type="text" class="form-control" id="loginUsername" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="loginPassword" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="loginPassword" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                                </form>
+                                <div class="text-center mt-3">
+                                    <p>Don't have an account? <a href="#" onclick="showRegisterPage()">Register here</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <div id="registerPage" class="hidden">
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <h3 class="card-title text-center mb-4">Register</h3>
+                                <form id="registerForm">
+                                    <div class="mb-3">
+                                        <label for="registerUsername" class="form-label">Username</label>
+                                        <input type="text" class="form-control" id="registerUsername" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="registerEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="registerEmail" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="registerPassword" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="registerPassword" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="registerRole" class="form-label">Role</label>
+                                        <select class="form-select" id="registerRole" required>
+                                            <option value="">Select Role</option>
+                                            <option value="Teacher">Teacher</option>
+                                            <option value="Student">Student</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">Register</button>
+                                </form>
+                                <div class="text-center mt-3">
+                                    <p>Already have an account? <a href="#" onclick="showLoginPage()">Login here</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="hidden">
+            <div class="container py-4">
+                <h2 class="mb-4">Admin Dashboard</h2>
+                
+                <!-- Reports Navigation -->
+                <ul class="nav nav-tabs mb-4" id="adminTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#revenueReport">Revenue Report</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#referralReport">Referral Report</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#popularInstruments">Popular Instruments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#lessonsBooked">Lessons Booked</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#users">Users</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Revenue Report -->
+                    <div class="tab-pane fade show active" id="revenueReport">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Revenue Report</h5>
+                                        <select class="form-select" id="revenuePeriod" onchange="loadRevenueReport()">
+                                            <option value="quarter">This Quarter</option>
+                                        </select>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="revenueChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Revenue Distribution Reports -->
+                        <div class="row mt-4">
+                            <!-- Revenue Distribution by Instrument -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Revenue Distribution by Instrument</h5>
+                                        <small class="text-muted">Instruments contributing to 50% of revenue</small>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="revenueDistributionInstrumentChart"></canvas>
+                                        </div>
+                                        <div id="instrumentDistributionSummary" class="mt-3">
+                                            <!-- Summary will be loaded here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Revenue Distribution by Student -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Revenue Distribution by Student</h5>
+                                        <small class="text-muted">Students contributing to 50% of revenue</small>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="revenueDistributionStudentChart"></canvas>
+                                        </div>
+                                        <div id="studentDistributionSummary" class="mt-3">
+                                            <!-- Summary will be loaded here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Referral Report -->
+                    <div class="tab-pane fade" id="referralReport">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Referral Sources</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="referralChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Popular Instruments -->
+                    <div class="tab-pane fade" id="popularInstruments">
+                        <div class="row">
+                            <!-- Popular Instruments Chart -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Popular Instruments (Bookings)</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="instrumentsChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Revenue by Instrument Chart -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Revenue by Instrument</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="revenueByInstrumentChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lessons Booked -->
+                    <div class="tab-pane fade" id="lessonsBooked">
+                        <!-- Bookings Table -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5>All Bookings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="bookingsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Student</th>
+                                                <th>Teacher</th>
+                                                <th>Instrument</th>
+                                                <th>Date</th>
+                                                <th>Cost</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Data will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Calendar View -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Bookings Calendar - October 2025</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="bookingsCalendar" class="calendar-container">
+                                    <!-- Calendar will be generated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Users -->
+                    <div class="tab-pane fade" id="users">
+                        <div class="row">
+                            <!-- User Statistics Cards -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Users</h5>
+                                        <h2 class="text-primary" id="totalUsers">-</h2>
+                                        <p class="text-muted">Registered Accounts</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-4">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Repeat Students</h5>
+                                        <h2 class="text-success" id="repeatStudents">-</h2>
+                                        <p class="text-muted">Students with Multiple Lessons</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-4">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Top Revenue Contributors</h5>
+                                        <h2 class="text-warning" id="topContributors">-</h2>
+                                        <p class="text-muted">Students Driving Revenue</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Detailed Reports -->
+                        <div class="row">
+                            <!-- Repeat Students Table -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Students with Multiple Lessons</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped" id="repeatStudentsTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Student Name</th>
+                                                        <th>Lessons Booked</th>
+                                                        <th>Total Spent</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Data will be loaded here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Top Revenue Contributors -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Top Revenue Contributors</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped" id="topContributorsTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Student Name</th>
+                                                        <th>Revenue Generated</th>
+                                                        <th>% of Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Data will be loaded here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Dashboard -->
+        <div id="teacherDashboard" class="hidden">
+            <div class="container py-4">
+                <h2 class="mb-4">Teacher Dashboard</h2>
+                
+                <!-- Teacher Navigation -->
+                <ul class="nav nav-tabs mb-4" id="teacherTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#teacherProfile">My Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#teacherAvailability">Availability</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#scheduleLessons">Schedule Lessons</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#teacherLessons">My Lessons</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Teacher Profile -->
+                    <div class="tab-pane fade show active" id="teacherProfile">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Teacher Profile</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="teacherProfileForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="teacherName" class="form-label">Name</label>
+                                                <input type="text" class="form-control" id="teacherName" placeholder="logan" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="teacherBio" class="form-label">Description</label>
+                                                <textarea class="form-control" id="teacherBio" rows="4" placeholder="Tell students about your teaching experience, musical background, and what makes you unique..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="defaultLessonCost" class="form-label">Default Cost Per Lesson ($)</label>
+                                                <input type="number" class="form-control" id="defaultLessonCost" step="0.01" placeholder="50.00" required>
+                                                <div class="form-text">Your standard rate for lessons. You can adjust this for individual bookings.</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="teacherContact" class="form-label">Contact Info</label>
+                                                <input type="text" class="form-control" id="teacherContact" placeholder="your.email@example.com">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="teacherInstruments" class="form-label">Instruments Taught</label>
+                                                <div id="instrumentsCheckboxes">
+                                                    <!-- Instruments will be loaded here -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="teacherPhoto" class="form-label">Profile Photo</label>
+                                                <input type="file" class="form-control" id="teacherPhoto" accept="image/*">
+                                                <div class="form-text">Upload a professional photo to help students connect with you</div>
+                                                <div id="photoPreview" class="mt-2" style="display: none;">
+                                                    <img id="previewImage" src="" alt="Profile Preview" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Profile</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher Availability -->
+                    <div class="tab-pane fade" id="teacherAvailability">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Manage Availability</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="availabilityForm">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label for="availabilityDate" class="form-label">Date</label>
+                                                <input type="date" class="form-control" id="availabilityDate" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label for="availabilityStart" class="form-label">Start Time</label>
+                                                <input type="time" class="form-control" id="availabilityStart" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label for="availabilityDuration" class="form-label">Lesson Duration</label>
+                                                <select class="form-select" id="availabilityDuration" required>
+                                                    <option value="30">30 minutes</option>
+                                                    <option value="45">45 minutes</option>
+                                                    <option value="60">1 hour</option>
+                                                    <option value="75">1 hour 15 minutes</option>
+                                                    <option value="90">1 hour 30 minutes</option>
+                                                    <option value="120">2 hours</option>
+                                                    <option value="150">2 hours 30 minutes</option>
+                                                    <option value="180">3 hours</option>
+                                                    <option value="210">3 hours 30 minutes</option>
+                                                    <option value="240">4 hours</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label for="availabilityVirtual" class="form-label">Type</label>
+                                                <select class="form-select" id="availabilityVirtual">
+                                                    <option value="false">In-Person</option>
+                                                    <option value="true">Virtual</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="availabilityCost" class="form-label">Cost Per Lesson ($)</label>
+                                                <input type="number" class="form-control" id="availabilityCost" step="0.01" placeholder="50.00" required>
+                                                <div class="form-text">Cost for lessons during this availability slot</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="availabilityNotes" class="form-label">Notes (Optional)</label>
+                                                <input type="text" class="form-control" id="availabilityNotes" placeholder="Any special notes for this time slot...">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="alert alert-info">
+                                                <strong>End Time:</strong> <span id="calculatedEndTime">--:--</span>
+                                                <br><small class="text-muted">Automatically calculated based on start time and duration</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Add Availability</button>
+                                </form>
+                                
+                                <hr>
+                                
+                                <h6>Current Availability</h6>
+                                <div id="currentAvailability">
+                                    <!-- Current availability will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Schedule Lessons -->
+                    <div class="tab-pane fade" id="scheduleLessons">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Schedule New Lesson</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="scheduleLessonForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="lessonStudent" class="form-label">Student Name</label>
+                                                <input type="text" class="form-control" id="lessonStudent" placeholder="Enter student name" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="lessonInstrument" class="form-label">Instrument</label>
+                                                <select class="form-select" id="lessonInstrument" required>
+                                                    <option value="">Select instrument</option>
+                                                    <option value="Piano">Piano</option>
+                                                    <option value="Guitar">Guitar</option>
+                                                    <option value="Violin">Violin</option>
+                                                    <option value="Drums">Drums</option>
+                                                    <option value="Voice/Singing">Voice/Singing</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="lessonDate" class="form-label">Lesson Date</label>
+                                                <input type="date" class="form-control" id="lessonDate" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="lessonTime" class="form-label">Lesson Time</label>
+                                                <input type="time" class="form-control" id="lessonTime" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="lessonDuration" class="form-label">Duration</label>
+                                                <select class="form-select" id="lessonDuration" required>
+                                                    <option value="30">30 minutes</option>
+                                                    <option value="45">45 minutes</option>
+                                                    <option value="60">1 hour</option>
+                                                    <option value="75">1 hour 15 minutes</option>
+                                                    <option value="90">1 hour 30 minutes</option>
+                                                    <option value="120">2 hours</option>
+                                                    <option value="150">2 hours 30 minutes</option>
+                                                    <option value="180">3 hours</option>
+                                                    <option value="210">3 hours 30 minutes</option>
+                                                    <option value="240">4 hours</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="lessonType" class="form-label">Lesson Type</label>
+                                                <select class="form-select" id="lessonType" required>
+                                                    <option value="In-Person">In-Person</option>
+                                                    <option value="Virtual">Virtual</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="lessonCost" class="form-label">Lesson Cost ($)</label>
+                                                <input type="number" class="form-control" id="lessonCost" step="0.01" placeholder="50.00" required>
+                                                <div class="form-text">Custom rate for this specific lesson</div>
+                                                <div class="alert alert-info mt-2" id="costPreview" style="display: none;">
+                                                    <strong>Cost Preview:</strong> <span id="costAmount">$0.00</span> for this lesson
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="lessonNotes" class="form-label">Notes (Optional)</label>
+                                                <textarea class="form-control" id="lessonNotes" rows="3" placeholder="Any special notes for this lesson..."></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Lesson Cost Summary</h6>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <strong>Duration:</strong> <span id="durationDisplay">30 minutes</span>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <strong>Total Cost:</strong> <span id="totalCostDisplay" class="text-primary">$0.00</span>
+                                                        </div>
+                                                    </div>
+                                                    <small class="text-muted">This cost will be visible to students when they book this lesson</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-3">Schedule Lesson</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher Lessons -->
+                    <div class="tab-pane fade" id="teacherLessons">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>My Booked Lessons</h5>
+                                <p class="mb-0 text-muted">View all lessons that have been booked with you</p>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                            <input type="text" class="form-control" id="lessonSearch" placeholder="Search lessons by student name or instrument...">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <select class="form-select" id="lessonStatusFilter">
+                                            <option value="">All Statuses</option>
+                                            <option value="Confirmed">Confirmed</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="teacherLessonsList">
+                                    <!-- Lessons will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Dashboard -->
+        <div id="studentDashboard" class="hidden">
+            <div class="container py-4">
+                <h2 class="mb-4">Student Dashboard</h2>
+                
+                <!-- Student Navigation -->
+                <ul class="nav nav-tabs mb-4" id="studentTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#studentProfile">My Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#browseTeachers">Browse Teachers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#studentBookings">My Bookings</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Student Profile -->
+                    <div class="tab-pane fade show active" id="studentProfile">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Student Profile</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="studentProfileForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="studentName" class="form-label">Name</label>
+                                                <input type="text" class="form-control" id="studentName" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="studentContact" class="form-label">Contact Info</label>
+                                                <input type="text" class="form-control" id="studentContact">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="studentPayment" class="form-label">Payment Info (Card Number)</label>
+                                                <input type="text" class="form-control" id="studentPayment" placeholder="1234-5678-9012-3456">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Profile</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Browse Teachers -->
+                    <div class="tab-pane fade" id="browseTeachers">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Browse Teachers</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <select class="form-select" id="instrumentFilter" onchange="filterTeachersByInstrument()">
+                                            <option value="">All Instruments</option>
+                                            <!-- Instruments will be loaded here -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="teachersList">
+                                    <!-- Teachers will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Student Bookings -->
+                    <div class="tab-pane fade" id="studentBookings">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>My Bookings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="studentBookingsList">
+                                    <!-- Bookings will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Browse Page (for guests) -->
+        <div id="browsePage" class="hidden">
+            <div class="container py-4">
+                <h2 class="mb-4">Browse Teachers</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <select class="form-select" id="guestInstrumentFilter" onchange="filterTeachersByInstrument()">
+                                    <option value="">All Instruments</option>
+                                    <!-- Instruments will be loaded here -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="guestTeachersList">
+                            <!-- Teachers will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="resources/scripts/index.js"></script>
+</body>
+</html>
