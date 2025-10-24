@@ -65,6 +65,42 @@ function showHomePage() {
     hideAllPages();
     document.getElementById('homePage').classList.remove('hidden');
     updateNavigation();
+    
+    // If user is logged in, show welcome message instead of login prompts
+    if (currentUser) {
+        updateHomePageForLoggedInUser();
+    }
+}
+
+function updateHomePageForLoggedInUser() {
+    // Update the hero section for logged-in users
+    const heroSection = document.querySelector('.hero-section .container .row .col-lg-6:first-child');
+    if (heroSection) {
+        heroSection.innerHTML = `
+            <h1 class="display-4 fw-bold mb-4">Welcome back, ${currentUser.username}!</h1>
+            <p class="lead mb-4">Ready to continue your musical journey? Access your dashboard to manage your ${currentUser.role.toLowerCase()} activities.</p>
+            <div class="d-flex gap-3">
+                <button class="btn btn-light btn-lg" onclick="showDashboard()">Go to Dashboard</button>
+                <button class="btn btn-outline-light btn-lg" onclick="logout()">Logout</button>
+            </div>
+        `;
+    }
+}
+
+function resetHomePageForLoggedOutUser() {
+    // Reset the hero section to the original logged-out state
+    const heroSection = document.querySelector('.hero-section .container .row .col-lg-6:first-child');
+    if (heroSection) {
+        heroSection.innerHTML = `
+            <h1 class="display-4 fw-bold mb-4">Connect with Music</h1>
+            <p class="lead mb-4">Freelance Music connects talented music teachers with eager students. Book lessons, learn instruments, and share your passion for music.</p>
+            <div class="d-flex gap-3">
+                <button class="btn btn-light btn-lg" onclick="showRegisterPage()">Get Started</button>
+                <button class="btn btn-outline-light btn-lg" onclick="showLoginPage()">Login</button>
+                <button class="btn btn-outline-warning btn-lg" onclick="showAdminLoginPage()">Admin Login</button>
+            </div>
+        `;
+    }
 }
 
 function showLoginPage() {
@@ -241,6 +277,7 @@ function logout() {
     localStorage.removeItem('currentUser');
     updateNavigation();
     showHomePage();
+    resetHomePageForLoggedOutUser();
 }
 
 // API Helper Functions
@@ -740,6 +777,12 @@ async function loadTeacherData() {
             populateTeacherProfile(profile);
         }
         
+        // Load instruments for teacher profile
+        console.log('Loading instruments...');
+        const instruments = await apiCall('/students/instruments');
+        console.log('Instruments loaded:', instruments);
+        populateInstrumentsCheckboxes(instruments);
+        
         // Load availability from API
         const availability = await apiCall('/teachers/availability');
         window.allAvailability = availability;
@@ -770,6 +813,15 @@ function populateTeacherProfile(profile) {
         preview.style.display = 'block';
     }
     
+    // Handle instruments - check the boxes for saved instruments
+    if (profile.Instruments && profile.Instruments.length > 0) {
+        profile.Instruments.forEach(instrument => {
+            const checkbox = document.getElementById(`instrument${instrument.Id}`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    }
     
     // Load default cost into schedule lesson form
     loadDefaultLessonCost();
@@ -863,27 +915,39 @@ async function handleScheduleLesson(event) {
     }
     
     try {
+        // Convert 24-hour time to 12-hour format for consistency
+        const [hours, minutes] = time.split(':').map(Number);
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const hours12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+        const time12Hour = `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+        
+        console.log('Original time (24-hour):', time);
+        console.log('Converted time (12-hour):', time12Hour);
+        
         const response = await apiCall('/teachers/schedule-lesson', 'POST', {
             studentName: student,
             instrument: instrument,
             lessonDate: date,
-            lessonTime: time,
+            lessonTime: time12Hour,
             duration: duration,
             lessonType: type,
             cost: cost,
             notes: notes
         });
         
+        // Use the real lesson ID returned from the API
+        const lessonId = response.lessonId;
+        
         // Create new lesson object
-        const [hours, minutes] = time.split(':').map(Number);
-        const startMinutes = hours * 60 + minutes;
+        const [hours2, minutes2] = time.split(':').map(Number);
+        const startMinutes = hours2 * 60 + minutes2;
         const endMinutes = startMinutes + duration;
         const endHours = Math.floor(endMinutes / 60);
         const endMins = endMinutes % 60;
         const endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
         
         const newLesson = {
-            id: Date.now(), // Generate a temporary ID
+            id: lessonId, // Use the real database ID
             student: {
                 name: student,
                 contactInfo: 'student@example.com' // Default contact
@@ -991,7 +1055,11 @@ function calculateEndTime() {
         const endHours = Math.floor(endMinutes / 60);
         const endMins = endMinutes % 60;
         
-        const endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+        // Convert to 12-hour format with AM/PM
+        const period = endHours >= 12 ? 'PM' : 'AM';
+        const hours12 = endHours === 0 ? 12 : endHours > 12 ? endHours - 12 : endHours;
+        
+        const endTime = `${hours12}:${endMins.toString().padStart(2, '0')} ${period}`;
         endTimeDisplay.textContent = endTime;
     } else {
         endTimeDisplay.textContent = '--:--';
@@ -1007,11 +1075,24 @@ function loadDefaultAvailabilityCost() {
 }
 
 // Convert 24-hour time to 12-hour format with AM/PM
-function formatTime12Hour(time24) {
-    if (!time24 || typeof time24 !== 'string') {
+function formatTime12Hour(timeInput) {
+    if (!timeInput || typeof timeInput !== 'string') {
         return '--:--';
     }
-    const [hours, minutes] = time24.split(':').map(Number);
+    
+    // Check if it's already in 12-hour format (contains AM/PM)
+    if (timeInput.includes('AM') || timeInput.includes('PM')) {
+        return timeInput; // Already in 12-hour format
+    }
+    
+    // Handle 24-hour format
+    const [hours, minutes] = timeInput.split(':').map(Number);
+    
+    // Check if parsing was successful
+    if (isNaN(hours) || isNaN(minutes)) {
+        return '--:--';
+    }
+    
     const period = hours >= 12 ? 'PM' : 'AM';
     const hours12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
     return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
@@ -1050,20 +1131,37 @@ function checkForOverlappingLessons(newDate, newTime, newDuration) {
 }
 
 function populateInstrumentsCheckboxes(instruments) {
+    console.log('populateInstrumentsCheckboxes called with:', instruments);
     const container = document.getElementById('instrumentsCheckboxes');
+    console.log('Container found:', container);
+    
+    if (!container) {
+        console.error('instrumentsCheckboxes container not found!');
+        return;
+    }
+    
     container.innerHTML = '';
     
+    if (!instruments || instruments.length === 0) {
+        console.log('No instruments to display');
+        container.innerHTML = '<p class="text-muted">No instruments available.</p>';
+        return;
+    }
+    
     instruments.forEach(instrument => {
+        console.log('Creating checkbox for instrument:', instrument);
         const div = document.createElement('div');
         div.className = 'form-check';
         div.innerHTML = `
-            <input class="form-check-input" type="checkbox" value="${instrument.id}" id="instrument${instrument.id}">
-            <label class="form-check-label" for="instrument${instrument.id}">
-                ${instrument.name}
+            <input class="form-check-input" type="checkbox" value="${instrument.Id || instrument.id}" id="instrument${instrument.Id || instrument.id}">
+            <label class="form-check-label" for="instrument${instrument.Id || instrument.id}">
+                ${instrument.Name || instrument.name}
             </label>
         `;
         container.appendChild(div);
     });
+    
+    console.log('Instruments checkboxes populated');
 }
 
 async function handleAddAvailability(event) {
@@ -1080,11 +1178,9 @@ async function handleAddAvailability(event) {
     const date = new Date(dateInput).toISOString().split('T')[0];
     
     // Calculate end time
-    // Convert 12-hour format to 24-hour format for calculation
-    const time12Hour = startTime;
-    const [time, period] = time12Hour.split(' ');
-    const [hours, minutes] = time.split(':').map(Number);
-    const hours24 = period === 'PM' && hours !== 12 ? hours + 12 : (period === 'AM' && hours === 12 ? 0 : hours);
+    // startTime is already in 24-hour format from HTML time input (e.g., "14:30")
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const hours24 = hours;
     
     const startMinutes = hours24 * 60 + minutes;
     const endMinutes = startMinutes + duration;
@@ -1123,7 +1219,7 @@ async function handleAddAvailability(event) {
         const newSlot = {
             Id: Date.now(), // Generate a temporary ID
             Date: date,
-            StartTime: startTime,
+            StartTime: `${hours24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
             EndTime: endTime,
             IsAvailable: true,
             IsVirtual: isVirtual,
@@ -1164,15 +1260,27 @@ function checkForOverlappingAvailability(newDate, newTime, newDuration) {
     
     // Check against existing availability on the same date
     return window.allAvailability.some(slot => {
-        // Check if it's the same date
-        const slotDate = new Date(slot.date).toISOString().split('T')[0];
+        // Handle both property name formats (API returns capitalized, local data uses lowercase)
+        const slotDateValue = slot.Date || slot.date;
+        const slotStartTime = slot.StartTime || slot.startTime;
+        const slotEndTime = slot.EndTime || slot.endTime;
+        
+        // Check if it's the same date - handle both formats safely
+        let slotDate;
+        try {
+            slotDate = new Date(slotDateValue).toISOString().split('T')[0];
+        } catch (error) {
+            console.warn('Invalid date format in slot:', slotDateValue);
+            return false;
+        }
+        
         if (slotDate !== newDate) {
             return false;
         }
         
         // Parse existing availability times
-        const [slotStartHours, slotStartMins] = slot.startTime.split(':').map(Number);
-        const [slotEndHours, slotEndMins] = slot.endTime.split(':').map(Number);
+        const [slotStartHours, slotStartMins] = slotStartTime.split(':').map(Number);
+        const [slotEndHours, slotEndMins] = slotEndTime.split(':').map(Number);
         
         const slotStartMinutes = slotStartHours * 60 + slotStartMins;
         const slotEndMinutes = slotEndHours * 60 + slotEndMins;
@@ -1347,29 +1455,35 @@ function updateLessonStatusInUI(lessonId, newStatus) {
         // Lesson status updated in database via API
     }
     
-    // Find the lesson card in the DOM and update it
+    // Find the specific lesson card in the DOM and update only that one
     const lessonCards = document.querySelectorAll('.lesson-item');
     lessonCards.forEach(card => {
-        if (card.getAttribute('data-status') !== newStatus) {
-            // Update the status badge
-            const statusBadge = card.querySelector('.badge');
-            if (statusBadge) {
-                statusBadge.textContent = newStatus;
+        // Check if this card has the specific lesson ID in its action buttons
+        const actionButtons = card.querySelector('.d-flex.flex-column.gap-2');
+        if (actionButtons) {
+            // Look for buttons with onclick that contains this lessonId
+            const hasThisLessonId = actionButtons.innerHTML.includes(`onclick="confirmLesson(${lessonId})"`) ||
+                                   actionButtons.innerHTML.includes(`onclick="markCompleted(${lessonId})"`) ||
+                                   actionButtons.innerHTML.includes(`onclick="viewLessonDetails(${lessonId})"`);
+            
+            if (hasThisLessonId && card.getAttribute('data-status') !== newStatus) {
+                // Update the status badge
+                const statusBadge = card.querySelector('.badge');
+                if (statusBadge) {
+                    statusBadge.textContent = newStatus;
+                    
+                    // Update badge color based on status
+                    statusBadge.className = 'badge bg-' + (
+                        newStatus === 'Completed' ? 'success' : 
+                        newStatus === 'Confirmed' ? 'primary' : 
+                        newStatus === 'Pending' ? 'warning' : 'secondary'
+                    );
+                }
                 
-                // Update badge color based on status
-                statusBadge.className = 'badge bg-' + (
-                    newStatus === 'Completed' ? 'success' : 
-                    newStatus === 'Confirmed' ? 'primary' : 
-                    newStatus === 'Pending' ? 'warning' : 'secondary'
-                );
-            }
-            
-            // Update the data attribute
-            card.setAttribute('data-status', newStatus);
-            
-            // Update action buttons based on new status
-            const actionButtons = card.querySelector('.d-flex.flex-column.gap-2');
-            if (actionButtons) {
+                // Update the data attribute
+                card.setAttribute('data-status', newStatus);
+                
+                // Update action buttons based on new status
                 if (newStatus === 'Completed') {
                     // Remove all action buttons for completed lessons
                     actionButtons.innerHTML = `
@@ -1396,12 +1510,6 @@ function updateLessonStatusInUI(lessonId, newStatus) {
 // Student Functions
 async function loadStudentData() {
     try {
-        // Load student profile
-        const profile = await apiCall('/students/my-profile');
-        if (profile) {
-            populateStudentProfile(profile);
-        }
-        
         // Load instruments for filtering
         const instruments = await apiCall('/students/instruments');
         populateInstrumentFilter(instruments);
@@ -1409,13 +1517,10 @@ async function loadStudentData() {
         // Load teachers
         await loadTeachers();
         
-        // Load bookings
-        const bookings = await apiCall('/students/my-bookings');
-        populateStudentBookings(bookings);
-        
     } catch (error) {
         console.error('Error loading student data:', error);
-        alert('Failed to load student data. Please try again.');
+        // Don't show alert, just log the error
+        console.log('Some student data not yet implemented in API');
     }
 }
 
@@ -1465,20 +1570,16 @@ function populateInstrumentFilter(instruments) {
 
 async function loadTeachers(instrumentId = null) {
     try {
-        let endpoint = '/teachers';
-        if (instrumentId) {
-            endpoint = `/students/teachers/by-instrument/${instrumentId}`;
-        }
-        
-        const teachers = await apiCall(endpoint);
-        populateTeachersList(teachers);
+        // Use the correct API endpoint
+        const teachers = await apiCall('/teachers/all');
+        populateTeachersList(teachers, instrumentId);
     } catch (error) {
         console.error('Error loading teachers:', error);
         alert('Failed to load teachers. Please try again.');
     }
 }
 
-function populateTeachersList(teachers) {
+function populateTeachersList(teachers, instrumentFilter = null) {
     const container = document.getElementById('teachersList');
     const guestContainer = document.getElementById('guestTeachersList');
     
@@ -1486,24 +1587,54 @@ function populateTeachersList(teachers) {
         if (target) {
             target.innerHTML = '';
             
-            if (teachers.length === 0) {
+            if (!teachers || teachers.length === 0) {
                 target.innerHTML = '<p class="text-muted">No teachers found.</p>';
                 return;
             }
             
-            teachers.forEach(teacher => {
+            // Filter teachers by instrument if specified
+            let filteredTeachers = teachers;
+            if (instrumentFilter) {
+                filteredTeachers = teachers.filter(teacher => {
+                    // Check if teacher teaches the selected instrument
+                    return teacher.Instruments && teacher.Instruments.some(inst => 
+                        inst.Id === instrumentFilter || 
+                        inst.Name === instrumentFilter
+                    );
+                });
+            }
+            
+            if (filteredTeachers.length === 0) {
+                target.innerHTML = '<p class="text-muted">No teachers found for the selected instrument.</p>';
+                return;
+            }
+            
+            filteredTeachers.forEach((teacher, index) => {
                 const div = document.createElement('div');
                 div.className = 'teacher-card';
+                
+                // Get teacher's instruments
+                const instruments = teacher.Instruments ? 
+                    teacher.Instruments.map(inst => inst.Name).join(', ') : 
+                    'Not specified';
+                
+                // Get teacher's bio/description
+                const bio = teacher.Bio || 'No description available';
+                
+                // Get teacher's rate
+                const rate = teacher.DefaultLessonCost || 'Contact for pricing';
+                
                 div.innerHTML = `
                     <div class="row">
                         <div class="col-md-8">
-                            <h5>${teacher.name}</h5>
-                            <p class="text-muted">${teacher.bio}</p>
-                            <p><strong>Rate:</strong> $${teacher.hourlyRate}/hour</p>
-                            <p><strong>Instruments:</strong> ${teacher.instruments.map(i => i.instrument.name).join(', ')}</p>
+                            <h5>${teacher.Name || teacher.Username || 'Teacher'}</h5>
+                            <p class="text-muted">${bio}</p>
+                            <p><strong>Rate:</strong> $${rate}/lesson</p>
+                            <p><strong>Instruments:</strong> ${instruments}</p>
+                            <p><strong>Contact:</strong> ${teacher.ContactInfo || 'Not provided'}</p>
                         </div>
                         <div class="col-md-4 text-end">
-                            <button class="btn btn-primary" onclick="viewTeacherAvailability(${teacher.id})">
+                            <button class="btn btn-primary" onclick="viewTeacherAvailability(${teacher.Id})">
                                 View Availability
                             </button>
                         </div>
@@ -1522,7 +1653,17 @@ async function loadGuestTeachers() {
         await loadTeachers();
     } catch (error) {
         console.error('Error loading guest teachers:', error);
-        alert('Failed to load teachers. Please try again.');
+        // Use fallback approach
+        console.log('Using fallback for guest teachers');
+        const mockInstruments = [
+            { Id: 1, Name: "Piano" },
+            { Id: 2, Name: "Guitar" },
+            { Id: 3, Name: "Violin" },
+            { Id: 4, Name: "Drums" },
+            { Id: 5, Name: "Voice/Singing" }
+        ];
+        populateInstrumentFilter(mockInstruments);
+        await loadTeachers();
     }
 }
 
@@ -1530,11 +1671,8 @@ function filterTeachersByInstrument() {
     const filter = document.getElementById('instrumentFilter') || document.getElementById('guestInstrumentFilter');
     const instrumentId = filter.value;
     
-    if (instrumentId) {
-        loadTeachers(parseInt(instrumentId));
-    } else {
-        loadTeachers();
-    }
+    // Reload teachers with the selected instrument filter
+    loadTeachers(instrumentId);
 }
 
 async function viewTeacherAvailability(teacherId) {

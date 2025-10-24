@@ -63,3 +63,4 @@ C:\Users\logan\Documents\Source\Repos\MIS321\pa2\Client\api\obj\Debug\net8.0\Fre
 C:\Users\logan\Documents\Source\Repos\MIS321\pa2\Client\api\obj\Debug\net8.0\FreelanceMusicAPI.genruntimeconfig.cache
 C:\Users\logan\Documents\Source\Repos\MIS321\pa2\Client\api\obj\Debug\net8.0\ref\FreelanceMusicAPI.dll
 C:\Users\logan\Documents\Source\Repos\MIS321\pa2\Client\api\bin\Debug\net8.0\Dapper.dll
+C:\Users\logan\Documents\Source\Repos\MIS321\pa2\Client\api\obj\Debug\net8.0\FreelanceMusicAPI.sourcelink.json

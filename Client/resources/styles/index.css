@@ -1,3 +1,1625 @@
+/* Home Page Mom & Pop Style */
+.hero-section {
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8d5b7 50%, #d4c4a8 100%) !important;
+    color: #5d4e37;
+    padding: 100px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Force override for hero section background */
+section.hero-section,
+.hero-section {
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8d5b7 50%, #d4c4a8 100%) !important;
+    background-color: #f5f0e8 !important;
+}
+
+/* Teacher Dashboard Styling - Mom & Pop Theme */
+#teacherDashboard {
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8d5b7 50%, #d4c4a8 100%);
+    min-height: 100vh;
+    padding: 20px 0;
+}
+
+#teacherDashboard .container {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin: 20px auto;
+}
+
+#teacherDashboard .nav-tabs {
+    border-bottom: 3px solid #e8d5b7;
+    margin-bottom: 30px;
+}
+
+#teacherDashboard .nav-tabs .nav-link {
+    background: linear-gradient(135deg, #fff8e1 0%, #f5f0e8 100%);
+    border: 2px solid #e8d5b7;
+    border-radius: 15px 15px 0 0;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin-right: 5px;
+    transition: all 0.3s ease;
+}
+
+#teacherDashboard .nav-tabs .nav-link:hover {
+    background: linear-gradient(135deg, #ffecb3 0%, #ffd54f 100%);
+    border-color: #b8a082;
+    transform: translateY(-2px);
+}
+
+#teacherDashboard .nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+#teacherDashboard .card {
+    background: linear-gradient(135deg, #fff8e1 0%, #f5f0e8 100%);
+    border: 2px solid #e8d5b7;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: relative;
+}
+
+#teacherDashboard .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #d4c4a8 0%, #b8a082 50%, #d4c4a8 100%);
+}
+
+#teacherDashboard .card-header {
+    background: linear-gradient(135deg, #faf8f3 0%, #f5f0e8 100%);
+    border-bottom: 2px solid #e8d5b7;
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    padding: 20px 25px;
+}
+
+#teacherDashboard .card-body {
+    padding: 25px;
+    color: #5d4e37;
+}
+
+#teacherDashboard .form-control {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #e8d5b7;
+    border-radius: 10px;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    transition: all 0.3s ease;
+}
+
+#teacherDashboard .form-control:focus {
+    background: rgba(255, 255, 255, 1);
+    border-color: #b8a082;
+    box-shadow: 0 0 0 0.2rem rgba(184, 160, 130, 0.25);
+}
+
+#teacherDashboard .form-label {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+#teacherDashboard .btn {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    border-radius: 15px;
+    padding: 10px 25px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+#teacherDashboard .btn-primary {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+}
+
+#teacherDashboard .btn-primary:hover {
+    background: linear-gradient(135deg, #9c7c5a 0%, #8a6f4a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#teacherDashboard .btn-success {
+    background: linear-gradient(135deg, #a8c09a 0%, #8fb37d 100%);
+    border-color: #7a9f6a;
+    color: white;
+}
+
+#teacherDashboard .btn-success:hover {
+    background: linear-gradient(135deg, #8fb37d 0%, #7a9f6a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#teacherDashboard .btn-info {
+    background: linear-gradient(135deg, #9bb5d4 0%, #7a9bc4 100%);
+    border-color: #6a8bb4;
+    color: white;
+}
+
+#teacherDashboard .btn-info:hover {
+    background: linear-gradient(135deg, #7a9bc4 0%, #6a8bb4 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#teacherDashboard .btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-color: #b45309;
+    color: white;
+}
+
+#teacherDashboard .btn-warning:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#teacherDashboard .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: #b91c1c;
+    color: white;
+}
+
+#teacherDashboard .btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#teacherDashboard .btn-outline-primary {
+    background: transparent;
+    border: 2px solid #b8a082;
+    color: #5d4e37;
+}
+
+#teacherDashboard .btn-outline-primary:hover {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+    transform: translateY(-2px);
+}
+
+#teacherDashboard .table {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+#teacherDashboard .table thead th {
+    background: linear-gradient(135deg, #d4c4a8 0%, #b8a082 100%);
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    border: none;
+    padding: 15px;
+}
+
+#teacherDashboard .table tbody td {
+    border-color: #e8d5b7;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    padding: 15px;
+}
+
+#teacherDashboard .table tbody tr:hover {
+    background: rgba(255, 248, 225, 0.5);
+}
+
+#teacherDashboard .alert {
+    border-radius: 15px;
+    border: 2px solid;
+    font-family: 'Georgia', serif;
+}
+
+#teacherDashboard .alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-color: #10b981;
+    color: #047857;
+}
+
+#teacherDashboard .alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
+#teacherDashboard .alert-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+    color: #1e40af;
+}
+
+/* Admin Dashboard Styling - Mom & Pop Theme */
+#adminDashboard {
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8d5b7 50%, #d4c4a8 100%);
+    min-height: 100vh;
+    padding: 20px 0;
+}
+
+#adminDashboard .container {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin: 20px auto;
+}
+
+#adminDashboard h2 {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+#adminDashboard .nav-tabs {
+    border-bottom: 3px solid #e8d5b7;
+    margin-bottom: 30px;
+}
+
+#adminDashboard .nav-tabs .nav-link {
+    background: linear-gradient(135deg, #fff8e1 0%, #f5f0e8 100%);
+    border: 2px solid #e8d5b7;
+    border-radius: 15px 15px 0 0;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin-right: 5px;
+    transition: all 0.3s ease;
+}
+
+#adminDashboard .nav-tabs .nav-link:hover {
+    background: linear-gradient(135deg, #ffecb3 0%, #ffd54f 100%);
+    border-color: #b8a082;
+    transform: translateY(-2px);
+}
+
+#adminDashboard .nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+#adminDashboard .card {
+    background: linear-gradient(135deg, #fff8e1 0%, #f5f0e8 100%);
+    border: 2px solid #e8d5b7;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: relative;
+}
+
+#adminDashboard .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #d4c4a8 0%, #b8a082 50%, #d4c4a8 100%);
+}
+
+#adminDashboard .card-header {
+    background: linear-gradient(135deg, #faf8f3 0%, #f5f0e8 100%);
+    border-bottom: 2px solid #e8d5b7;
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    padding: 20px 25px;
+}
+
+#adminDashboard .card-header h5 {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    margin: 0;
+}
+
+#adminDashboard .card-header small {
+    color: #6b5b47;
+    font-family: 'Georgia', serif;
+}
+
+#adminDashboard .card-body {
+    padding: 25px;
+    color: #5d4e37;
+}
+
+#adminDashboard .form-select {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #e8d5b7;
+    border-radius: 10px;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    transition: all 0.3s ease;
+}
+
+#adminDashboard .form-select:focus {
+    background: rgba(255, 255, 255, 1);
+    border-color: #b8a082;
+    box-shadow: 0 0 0 0.2rem rgba(184, 160, 130, 0.25);
+}
+
+#adminDashboard .table {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+#adminDashboard .table thead th {
+    background: linear-gradient(135deg, #d4c4a8 0%, #b8a082 100%);
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    border: none;
+    padding: 15px;
+}
+
+#adminDashboard .table tbody td {
+    border-color: #e8d5b7;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    padding: 15px;
+}
+
+#adminDashboard .table tbody tr:hover {
+    background: rgba(255, 248, 225, 0.5);
+}
+
+#adminDashboard .table-striped tbody tr:nth-of-type(odd) {
+    background: rgba(255, 248, 225, 0.3);
+}
+
+#adminDashboard .chart-container {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+#adminDashboard .alert {
+    border-radius: 15px;
+    border: 2px solid;
+    font-family: 'Georgia', serif;
+}
+
+#adminDashboard .alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-color: #10b981;
+    color: #047857;
+}
+
+#adminDashboard .alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
+#adminDashboard .alert-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+    color: #1e40af;
+}
+
+#adminDashboard .alert-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+#adminDashboard .btn {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    border-radius: 15px;
+    padding: 10px 25px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+#adminDashboard .btn-primary {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+}
+
+#adminDashboard .btn-primary:hover {
+    background: linear-gradient(135deg, #9c7c5a 0%, #8a6f4a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#adminDashboard .btn-success {
+    background: linear-gradient(135deg, #a8c09a 0%, #8fb37d 100%);
+    border-color: #7a9f6a;
+    color: white;
+}
+
+#adminDashboard .btn-success:hover {
+    background: linear-gradient(135deg, #8fb37d 0%, #7a9f6a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#adminDashboard .btn-info {
+    background: linear-gradient(135deg, #9bb5d4 0%, #7a9bc4 100%);
+    border-color: #6a8bb4;
+    color: white;
+}
+
+#adminDashboard .btn-info:hover {
+    background: linear-gradient(135deg, #7a9bc4 0%, #6a8bb4 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#adminDashboard .btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-color: #b45309;
+    color: white;
+}
+
+#adminDashboard .btn-warning:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#adminDashboard .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: #b91c1c;
+    color: white;
+}
+
+#adminDashboard .btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#adminDashboard .btn-outline-primary {
+    background: transparent;
+    border: 2px solid #b8a082;
+    color: #5d4e37;
+}
+
+#adminDashboard .btn-outline-primary:hover {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+    transform: translateY(-2px);
+}
+
+#adminDashboard .text-muted {
+    color: #6b5b47 !important;
+    font-family: 'Georgia', serif;
+}
+
+#adminDashboard .badge {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 8px 12px;
+}
+
+#adminDashboard .badge-success {
+    background: linear-gradient(135deg, #a8c09a 0%, #8fb37d 100%);
+    color: white;
+}
+
+#adminDashboard .badge-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+#adminDashboard .badge-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+#adminDashboard .badge-info {
+    background: linear-gradient(135deg, #9bb5d4 0%, #7a9bc4 100%);
+    color: white;
+}
+
+/* Student Dashboard Styling - Mom & Pop Theme */
+#studentDashboard {
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8d5b7 50%, #d4c4a8 100%);
+    min-height: 100vh;
+    padding: 20px 0;
+}
+
+#studentDashboard .container {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin: 20px auto;
+}
+
+#studentDashboard h2 {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+#studentDashboard .nav-tabs {
+    border-bottom: 3px solid #e8d5b7;
+    margin-bottom: 30px;
+}
+
+#studentDashboard .nav-tabs .nav-link {
+    background: linear-gradient(135deg, #fff8e1 0%, #f5f0e8 100%);
+    border: 2px solid #e8d5b7;
+    border-radius: 15px 15px 0 0;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin-right: 5px;
+    transition: all 0.3s ease;
+}
+
+#studentDashboard .nav-tabs .nav-link:hover {
+    background: linear-gradient(135deg, #ffecb3 0%, #ffd54f 100%);
+    border-color: #b8a082;
+    transform: translateY(-2px);
+}
+
+#studentDashboard .nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+#studentDashboard .card {
+    background: linear-gradient(135deg, #fff8e1 0%, #f5f0e8 100%);
+    border: 2px solid #e8d5b7;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: relative;
+}
+
+#studentDashboard .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #d4c4a8 0%, #b8a082 50%, #d4c4a8 100%);
+}
+
+#studentDashboard .card-header {
+    background: linear-gradient(135deg, #faf8f3 0%, #f5f0e8 100%);
+    border-bottom: 2px solid #e8d5b7;
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    padding: 20px 25px;
+}
+
+#studentDashboard .card-header h5 {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    margin: 0;
+}
+
+#studentDashboard .card-body {
+    padding: 25px;
+    color: #5d4e37;
+}
+
+#studentDashboard .form-control {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #e8d5b7;
+    border-radius: 10px;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    transition: all 0.3s ease;
+}
+
+#studentDashboard .form-control:focus {
+    background: rgba(255, 255, 255, 1);
+    border-color: #b8a082;
+    box-shadow: 0 0 0 0.2rem rgba(184, 160, 130, 0.25);
+}
+
+#studentDashboard .form-label {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+#studentDashboard .form-select {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #e8d5b7;
+    border-radius: 10px;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    transition: all 0.3s ease;
+}
+
+#studentDashboard .form-select:focus {
+    background: rgba(255, 255, 255, 1);
+    border-color: #b8a082;
+    box-shadow: 0 0 0 0.2rem rgba(184, 160, 130, 0.25);
+}
+
+#studentDashboard .btn {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    border-radius: 15px;
+    padding: 10px 25px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+#studentDashboard .btn-primary {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+}
+
+#studentDashboard .btn-primary:hover {
+    background: linear-gradient(135deg, #9c7c5a 0%, #8a6f4a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#studentDashboard .btn-success {
+    background: linear-gradient(135deg, #a8c09a 0%, #8fb37d 100%);
+    border-color: #7a9f6a;
+    color: white;
+}
+
+#studentDashboard .btn-success:hover {
+    background: linear-gradient(135deg, #8fb37d 0%, #7a9f6a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#studentDashboard .btn-info {
+    background: linear-gradient(135deg, #9bb5d4 0%, #7a9bc4 100%);
+    border-color: #6a8bb4;
+    color: white;
+}
+
+#studentDashboard .btn-info:hover {
+    background: linear-gradient(135deg, #7a9bc4 0%, #6a8bb4 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#studentDashboard .btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-color: #b45309;
+    color: white;
+}
+
+#studentDashboard .btn-warning:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#studentDashboard .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: #b91c1c;
+    color: white;
+}
+
+#studentDashboard .btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#studentDashboard .btn-outline-primary {
+    background: transparent;
+    border: 2px solid #b8a082;
+    color: #5d4e37;
+}
+
+#studentDashboard .btn-outline-primary:hover {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+    transform: translateY(-2px);
+}
+
+#studentDashboard .table {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+#studentDashboard .table thead th {
+    background: linear-gradient(135deg, #d4c4a8 0%, #b8a082 100%);
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    border: none;
+    padding: 15px;
+}
+
+#studentDashboard .table tbody td {
+    border-color: #e8d5b7;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    padding: 15px;
+}
+
+#studentDashboard .table tbody tr:hover {
+    background: rgba(255, 248, 225, 0.5);
+}
+
+#studentDashboard .table-striped tbody tr:nth-of-type(odd) {
+    background: rgba(255, 248, 225, 0.3);
+}
+
+#studentDashboard .alert {
+    border-radius: 15px;
+    border: 2px solid;
+    font-family: 'Georgia', serif;
+}
+
+#studentDashboard .alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-color: #10b981;
+    color: #047857;
+}
+
+#studentDashboard .alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
+#studentDashboard .alert-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+    color: #1e40af;
+}
+
+#studentDashboard .alert-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+#studentDashboard .text-muted {
+    color: #6b5b47 !important;
+    font-family: 'Georgia', serif;
+}
+
+#studentDashboard .badge {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 8px 12px;
+}
+
+#studentDashboard .badge-success {
+    background: linear-gradient(135deg, #a8c09a 0%, #8fb37d 100%);
+    color: white;
+}
+
+#studentDashboard .badge-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+#studentDashboard .badge-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+#studentDashboard .badge-info {
+    background: linear-gradient(135deg, #9bb5d4 0%, #7a9bc4 100%);
+    color: white;
+}
+
+#studentDashboard .card-body .row {
+    margin-bottom: 20px;
+}
+
+#studentDashboard .card-body .col-md-6 {
+    padding: 0 10px;
+}
+
+#studentDashboard .mb-3 {
+    margin-bottom: 20px;
+}
+
+#studentDashboard .input-group-text {
+    background: linear-gradient(135deg, #d4c4a8 0%, #b8a082 100%);
+    border: 2px solid #e8d5b7;
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+}
+
+#studentDashboard .input-group .form-control {
+    border-left: none;
+}
+
+#studentDashboard .input-group .form-control:focus {
+    border-left: none;
+    box-shadow: none;
+}
+
+#studentDashboard .input-group:focus-within .input-group-text {
+    border-color: #b8a082;
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+}
+
+/* Register Page Styling - Mom & Pop Theme */
+#registerPage {
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8d5b7 50%, #d4c4a8 100%);
+    min-height: 100vh;
+    padding: 40px 0;
+}
+
+#registerPage .container {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    margin: 20px auto;
+}
+
+#registerPage .card {
+    background: linear-gradient(135deg, #fff8e1 0%, #f5f0e8 100%);
+    border: 2px solid #e8d5b7;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: relative;
+}
+
+#registerPage .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #d4c4a8 0%, #b8a082 50%, #d4c4a8 100%);
+}
+
+#registerPage .card-body {
+    padding: 40px;
+    color: #5d4e37;
+}
+
+#registerPage .card-title {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    font-size: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+#registerPage .form-control {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #e8d5b7;
+    border-radius: 10px;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    transition: all 0.3s ease;
+    padding: 12px 15px;
+    font-size: 1rem;
+}
+
+#registerPage .form-control:focus {
+    background: rgba(255, 255, 255, 1);
+    border-color: #b8a082;
+    box-shadow: 0 0 0 0.2rem rgba(184, 160, 130, 0.25);
+    color: #4a3c2a;
+}
+
+#registerPage .form-label {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+#registerPage .form-select {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #e8d5b7;
+    border-radius: 10px;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    transition: all 0.3s ease;
+    padding: 12px 15px;
+    font-size: 1rem;
+}
+
+#registerPage .form-select:focus {
+    background: rgba(255, 255, 255, 1);
+    border-color: #b8a082;
+    box-shadow: 0 0 0 0.2rem rgba(184, 160, 130, 0.25);
+    color: #4a3c2a;
+}
+
+#registerPage .btn {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    border-radius: 15px;
+    padding: 12px 30px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    font-size: 1.1rem;
+}
+
+#registerPage .btn-primary {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+#registerPage .btn-primary:hover {
+    background: linear-gradient(135deg, #9c7c5a 0%, #8a6f4a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#registerPage .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#registerPage .mb-3 {
+    margin-bottom: 25px;
+}
+
+#registerPage .text-center p {
+    color: #6b5b47;
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    margin-top: 20px;
+}
+
+#registerPage .text-center a {
+    color: #b8a082;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+#registerPage .text-center a:hover {
+    color: #9c7c5a;
+    text-decoration: underline;
+}
+
+#registerPage .row {
+    margin: 0;
+}
+
+#registerPage .col-md-6,
+#registerPage .col-lg-4 {
+    padding: 0;
+}
+
+#registerPage .justify-content-center {
+    justify-content: center;
+}
+
+/* Login Page Styling - Mom & Pop Theme */
+#loginPage {
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8d5b7 50%, #d4c4a8 100%);
+    min-height: 100vh;
+    padding: 40px 0;
+}
+
+#loginPage .container {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    margin: 20px auto;
+}
+
+#loginPage .card {
+    background: linear-gradient(135deg, #fff8e1 0%, #f5f0e8 100%);
+    border: 2px solid #e8d5b7;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: relative;
+}
+
+#loginPage .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #d4c4a8 0%, #b8a082 50%, #d4c4a8 100%);
+}
+
+#loginPage .card-body {
+    padding: 40px;
+    color: #5d4e37;
+}
+
+#loginPage .card-title {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    font-size: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+#loginPage .form-control {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #e8d5b7;
+    border-radius: 10px;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    transition: all 0.3s ease;
+    padding: 12px 15px;
+    font-size: 1rem;
+}
+
+#loginPage .form-control:focus {
+    background: rgba(255, 255, 255, 1);
+    border-color: #b8a082;
+    box-shadow: 0 0 0 0.2rem rgba(184, 160, 130, 0.25);
+    color: #4a3c2a;
+}
+
+#loginPage .form-label {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+#loginPage .btn {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    border-radius: 15px;
+    padding: 12px 30px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    font-size: 1.1rem;
+}
+
+#loginPage .btn-primary {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border-color: #8a6f4a;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+#loginPage .btn-primary:hover {
+    background: linear-gradient(135deg, #9c7c5a 0%, #8a6f4a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#loginPage .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#loginPage .mb-3 {
+    margin-bottom: 25px;
+}
+
+#loginPage .text-center p {
+    color: #6b5b47;
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    margin-top: 20px;
+}
+
+#loginPage .text-center a {
+    color: #b8a082;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+#loginPage .text-center a:hover {
+    color: #9c7c5a;
+    text-decoration: underline;
+}
+
+#loginPage .row {
+    margin: 0;
+}
+
+#loginPage .col-md-6,
+#loginPage .col-lg-4 {
+    padding: 0;
+}
+
+#loginPage .justify-content-center {
+    justify-content: center;
+}
+
+/* Admin Login Page Styling - Mom & Pop Theme */
+#adminLoginPage {
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8d5b7 50%, #d4c4a8 100%);
+    min-height: 100vh;
+    padding: 40px 0;
+}
+
+#adminLoginPage .container {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    margin: 20px auto;
+}
+
+#adminLoginPage .card {
+    background: linear-gradient(135deg, #fff8e1 0%, #f5f0e8 100%);
+    border: 2px solid #e8d5b7;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: relative;
+}
+
+#adminLoginPage .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #d4c4a8 0%, #b8a082 50%, #d4c4a8 100%);
+}
+
+#adminLoginPage .card-body {
+    padding: 40px;
+    color: #5d4e37;
+}
+
+#adminLoginPage .card-title {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    font-size: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+#adminLoginPage .alert {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border: 2px solid #3b82f6;
+    border-radius: 15px;
+    color: #1e40af;
+    font-family: 'Georgia', serif;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+#adminLoginPage .alert-heading {
+    color: #1e40af;
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+#adminLoginPage .alert p {
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+
+#adminLoginPage .alert strong {
+    color: #1e40af;
+    font-weight: 700;
+}
+
+#adminLoginPage .form-control {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #e8d5b7;
+    border-radius: 10px;
+    color: #5d4e37;
+    font-family: 'Georgia', serif;
+    transition: all 0.3s ease;
+    padding: 12px 15px;
+    font-size: 1rem;
+}
+
+#adminLoginPage .form-control:focus {
+    background: rgba(255, 255, 255, 1);
+    border-color: #b8a082;
+    box-shadow: 0 0 0 0.2rem rgba(184, 160, 130, 0.25);
+    color: #4a3c2a;
+}
+
+#adminLoginPage .form-label {
+    color: #4a3c2a;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+#adminLoginPage .btn {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    border-radius: 15px;
+    padding: 12px 30px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    font-size: 1.1rem;
+}
+
+#adminLoginPage .btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-color: #b45309;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+#adminLoginPage .btn-warning:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#adminLoginPage .btn-warning:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#adminLoginPage .mb-3 {
+    margin-bottom: 25px;
+}
+
+#adminLoginPage .text-center p {
+    color: #6b5b47;
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    margin-top: 20px;
+}
+
+#adminLoginPage .text-center a {
+    color: #b8a082;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin: 0 10px;
+}
+
+#adminLoginPage .text-center a:hover {
+    color: #9c7c5a;
+    text-decoration: underline;
+}
+
+#adminLoginPage .row {
+    margin: 0;
+}
+
+#adminLoginPage .col-md-8,
+#adminLoginPage .col-lg-6 {
+    padding: 0;
+}
+
+#adminLoginPage .justify-content-center {
+    justify-content: center;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="music-notes" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><text x="10" y="15" font-family="serif" font-size="12" fill="rgba(93,78,55,0.1)">♪</text></pattern></defs><rect width="100" height="100" fill="url(%23music-notes)"/></svg>');
+    opacity: 0.3;
+    z-index: 1;
+}
+
+.hero-section .container {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-section h1 {
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    color: #4a3c2a;
+}
+
+.hero-section .lead {
+    font-family: 'Georgia', serif;
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: #6b5b47;
+}
+
+.hero-section .btn {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    border-radius: 25px;
+    padding: 12px 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.hero-section .btn-light {
+    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+    color: #5d4e37;
+    border: 2px solid #d4c4a8;
+}
+
+.hero-section .btn-light:hover {
+    background: linear-gradient(135deg, #ffecb3 0%, #ffd54f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.hero-section .btn-outline-light {
+    background: transparent;
+    color: #5d4e37;
+    border: 2px solid #d4c4a8;
+}
+
+.hero-section .btn-outline-light:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: #b8a082;
+    transform: translateY(-2px);
+}
+
+/* Feature Cards - Warm Style */
+.feature-card {
+    background: linear-gradient(135deg, #fff8e1 0%, #f5f0e8 100%);
+    border: 2px solid #e8d5b7;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #d4c4a8 0%, #b8a082 50%, #d4c4a8 100%);
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    border-color: #b8a082;
+}
+
+.feature-card .card-body {
+    padding: 2rem;
+    text-align: center;
+}
+
+.feature-card .card-title {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    color: #4a3c2a;
+    margin-bottom: 1rem;
+}
+
+.feature-card .card-text {
+    font-family: 'Georgia', serif;
+    color: #6b5b47;
+    line-height: 1.6;
+}
+
+.feature-card i {
+    color: #b8a082;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover i {
+    color: #9c7c5a;
+    transform: scale(1.1);
+}
+
+/* Role Cards - Cozy Style */
+.role-card {
+    background: linear-gradient(135deg, #faf8f3 0%, #f5f0e8 100%);
+    border: 3px solid #e8d5b7;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.role-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #d4c4a8 0%, #b8a082 50%, #d4c4a8 100%);
+}
+
+.role-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+    border-color: #b8a082;
+}
+
+.role-card .card-body {
+    padding: 2.5rem;
+    text-align: center;
+}
+
+.role-card .card-title {
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    color: #4a3c2a;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.role-card .card-text {
+    font-family: 'Georgia', serif;
+    color: #6b5b47;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.role-card ul {
+    text-align: left;
+    margin: 1.5rem 0;
+}
+
+.role-card ul li {
+    font-family: 'Georgia', serif;
+    color: #6b5b47;
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+}
+
+.role-card .btn {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    border-radius: 25px;
+    padding: 12px 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.role-card .btn-primary {
+    background: linear-gradient(135deg, #b8a082 0%, #9c7c5a 100%);
+    border: none;
+    color: white;
+}
+
+.role-card .btn-primary:hover {
+    background: linear-gradient(135deg, #9c7c5a 0%, #8a6f4a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.role-card .btn-success {
+    background: linear-gradient(135deg, #a8c09a 0%, #8fb37d 100%);
+    border: none;
+    color: white;
+}
+
+.role-card .btn-success:hover {
+    background: linear-gradient(135deg, #8fb37d 0%, #7a9f6a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.role-card .btn-info {
+    background: linear-gradient(135deg, #9bb5d4 0%, #7a9bc4 100%);
+    border: none;
+    color: white;
+}
+
+.role-card .btn-info:hover {
+    background: linear-gradient(135deg, #7a9bc4 0%, #6a8bb4 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+/* Section Backgrounds */
+.py-5 {
+    background: linear-gradient(135deg, #faf8f3 0%, #f5f0e8 100%);
+}
+
+.py-5.bg-light {
+    background: linear-gradient(135deg, #f0ebe3 0%, #e8d5b7 100%);
+}
+
+/* Typography */
+.display-4, .display-5 {
+    font-family: 'Georgia', serif;
+    color: #4a3c2a;
+}
+
+.lead {
+    font-family: 'Georgia', serif;
+    color: #6b5b47;
+}
+
+/* Navigation Enhancement */
+.navbar-brand {
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    color: #4a3c2a !important;
+}
+
+.navbar-brand i {
+    color: #b8a082;
+}
+
+/* Music Note Icon Enhancement */
+.hero-section .bi-music-note-beamed {
+    color: #b8a082;
+    opacity: 0.4;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 2.5rem;
+    }
+    
+    .feature-card, .role-card {
+        margin-bottom: 2rem;
+    }
+}
+
 /* Calendar Styles */
 .calendar-container {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

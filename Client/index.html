@@ -88,7 +88,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container">
                 <a class="navbar-brand" href="#" onclick="showHomePage()">
-                    <i class="bi bi-music-note-beamed"></i> Freelance Music
+                    <img src="https://i.ibb.co/Jj0gDdr3/freelance.png" alt="Freelance Music" style="height: 30px; width: auto; margin-right: 10px;"> Freelance Music
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -142,11 +142,12 @@
                             <div class="d-flex gap-3">
                                 <button class="btn btn-light btn-lg" onclick="showRegisterPage()">Get Started</button>
                                 <button class="btn btn-outline-light btn-lg" onclick="showLoginPage()">Login</button>
+                                <button class="btn btn-outline-warning btn-lg" onclick="showAdminLoginPage()">Admin Login</button>
                             </div>
                         </div>
                         <div class="col-lg-6">
-                            <div class="text-center">
-                                <i class="bi bi-music-note-beamed" style="font-size: 8rem; opacity: 0.3;"></i>
+                            <div class="text-center d-flex align-items-center justify-content-center" style="height: 100%;">
+                                <img src="https://i.ibb.co/Jj0gDdr3/freelance.png" alt="Freelance Music" style="max-width: 350px; width: 100%; height: auto; opacity: 0.9;">
                             </div>
                         </div>
                     </div>
@@ -286,6 +287,43 @@
             </div>
         </div>
 
+        <!-- Admin Login Page -->
+        <div id="adminLoginPage" class="hidden">
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-8 col-lg-6">
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <h3 class="card-title text-center mb-4">Admin Login</h3>
+                                
+                                <!-- Admin Credentials Display -->
+                                <div class="alert alert-info mb-4">
+                                    <h5 class="alert-heading">Test Admin Credentials</h5>
+                                    <p class="mb-2"><strong>Username:</strong> admin</p>
+                                    <p class="mb-0"><strong>Password:</strong> admin123</p>
+                                </div>
+                                
+                                <form id="adminLoginForm">
+                                    <div class="mb-3">
+                                        <label for="adminUsername" class="form-label">Username</label>
+                                        <input type="text" class="form-control" id="adminUsername" value="admin" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="adminPassword" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="adminPassword" value="admin123" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-warning w-100">Admin Login</button>
+                                </form>
+                                <div class="text-center mt-3">
+                                    <p>Regular user? <a href="#" onclick="showLoginPage()">User Login</a> | <a href="#" onclick="showHomePage()">Back to Home</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Register Page -->
         <div id="registerPage" class="hidden">
             <div class="container py-5">
@@ -309,12 +347,47 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="registerRole" class="form-label">Role</label>
-                                        <select class="form-select" id="registerRole" required>
+                                        <select class="form-select" id="registerRole" required onchange="toggleStudentFields()">
                                             <option value="">Select Role</option>
                                             <option value="Teacher">Teacher</option>
                                             <option value="Student">Student</option>
                                         </select>
                                     </div>
+                                    
+                                    <!-- Student-specific fields -->
+                                    <div id="studentFields" style="display: none;">
+                                        <hr>
+                                        <h6 class="text-primary">Student Information</h6>
+                                        <div class="mb-3">
+                                            <label for="registerStudentName" class="form-label">Full Name</label>
+                                            <input type="text" class="form-control" id="registerStudentName" placeholder="Enter your full name">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="registerStudentEmail" class="form-label">Email Address</label>
+                                            <input type="email" class="form-control" id="registerStudentEmail" placeholder="Enter your email address">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="registerStudentInstrument" class="form-label">Primary Instrument</label>
+                                            <select class="form-select" id="registerStudentInstrument">
+                                                <option value="">Select Instrument</option>
+                                                <option value="Piano">Piano</option>
+                                                <option value="Guitar">Guitar</option>
+                                                <option value="Violin">Violin</option>
+                                                <option value="Drums">Drums</option>
+                                                <option value="Voice/Singing">Voice/Singing</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="registerStudentLevel" class="form-label">Experience Level</label>
+                                            <select class="form-select" id="registerStudentLevel">
+                                                <option value="">Select Level</option>
+                                                <option value="Beginner">Beginner</option>
+                                                <option value="Intermediate">Intermediate</option>
+                                                <option value="Advanced">Advanced</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
                                     <button type="submit" class="btn btn-primary w-100">Register</button>
                                 </form>
                                 <div class="text-center mt-3">
@@ -921,15 +994,39 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label for="studentName" class="form-label">Name</label>
+                                                <label for="studentName" class="form-label">Full Name</label>
                                                 <input type="text" class="form-control" id="studentName" required>
                                             </div>
                                             <div class="mb-3">
+                                                <label for="studentEmail" class="form-label">Email Address</label>
+                                                <input type="email" class="form-control" id="studentEmail" required>
+                                            </div>
+                                            <div class="mb-3">
                                                 <label for="studentContact" class="form-label">Contact Info</label>
-                                                <input type="text" class="form-control" id="studentContact">
+                                                <input type="text" class="form-control" id="studentContact" placeholder="Phone number or additional contact">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="studentInstrument" class="form-label">Primary Instrument</label>
+                                                <select class="form-select" id="studentInstrument" required>
+                                                    <option value="">Select Instrument</option>
+                                                    <option value="Piano">Piano</option>
+                                                    <option value="Guitar">Guitar</option>
+                                                    <option value="Violin">Violin</option>
+                                                    <option value="Drums">Drums</option>
+                                                    <option value="Voice/Singing">Voice/Singing</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="studentLevel" class="form-label">Experience Level</label>
+                                                <select class="form-select" id="studentLevel" required>
+                                                    <option value="">Select Level</option>
+                                                    <option value="Beginner">Beginner</option>
+                                                    <option value="Intermediate">Intermediate</option>
+                                                    <option value="Advanced">Advanced</option>
+                                                </select>
+                                            </div>
                                             <div class="mb-3">
                                                 <label for="studentPayment" class="form-label">Payment Info (Card Number)</label>
                                                 <input type="text" class="form-control" id="studentPayment" placeholder="1234-5678-9012-3456">
