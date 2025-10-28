@@ -87,7 +87,7 @@
         <!-- Navigation -->
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container">
-                <a class="navbar-brand" href="#" onclick="showHomePage()">
+                <a class="navbar-brand" href="javascript:void(0)" onclick="showHomePage()">
                     <img src="https://i.ibb.co/Jj0gDdr3/freelance.png" alt="Freelance Music" style="height: 30px; width: auto; margin-right: 10px;"> Freelance Music
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -96,32 +96,32 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="showHomePage()">Home</a>
+                            <a class="nav-link" href="javascript:void(0)" onclick="showHomePage(); return false;">Home</a>
                         </li>
                         <li class="nav-item" id="adminNav" style="display: none;">
-                            <a class="nav-link" href="#" onclick="showAdminDashboard()">Admin Dashboard</a>
+                            <a class="nav-link" href="javascript:void(0)" onclick="showAdminDashboard(); return false;">Admin Dashboard</a>
                         </li>
                         <li class="nav-item" id="teacherNav" style="display: none;">
-                            <a class="nav-link" href="#" onclick="showTeacherDashboard()">Teacher Dashboard</a>
+                            <a class="nav-link" href="javascript:void(0)" onclick="showTeacherDashboard(); return false;">Teacher Dashboard</a>
                         </li>
                         <li class="nav-item" id="studentNav" style="display: none;">
-                            <a class="nav-link" href="#" onclick="showStudentDashboard()">Student Dashboard</a>
+                            <a class="nav-link" href="javascript:void(0)" onclick="showStudentDashboard(); return false;">Student Dashboard</a>
                         </li>
                     </ul>
                     <ul class="navbar-nav">
                         <li class="nav-item" id="loginNav">
-                            <a class="nav-link" href="#" onclick="showLoginPage()">Login</a>
+                            <a class="nav-link" href="javascript:void(0)" onclick="showLoginPage()">Login</a>
                         </li>
                         <li class="nav-item" id="registerNav">
-                            <a class="nav-link" href="#" onclick="showRegisterPage()">Register</a>
+                            <a class="nav-link" href="javascript:void(0)" onclick="showRegisterPage()">Register</a>
                         </li>
                         <li class="nav-item" id="userNav" style="display: none;">
                             <div class="dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <a class="nav-link dropdown-toggle" href="javascript:void(0)" role="button" data-bs-toggle="dropdown">
                                     <span id="userName">User</span>
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#" onclick="logout()">Logout</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="logout()">Logout</a></li>
                                 </ul>
                             </div>
                         </li>
@@ -140,8 +140,8 @@
                             <h1 class="display-4 fw-bold mb-4">Connect with Music</h1>
                             <p class="lead mb-4">Freelance Music connects talented music teachers with eager students. Book lessons, learn instruments, and share your passion for music.</p>
                             <div class="d-flex gap-3">
-                                <button class="btn btn-light btn-lg" onclick="showRegisterPage()">Get Started</button>
-                                <button class="btn btn-outline-light btn-lg" onclick="showLoginPage()">Login</button>
+                                <button class="btn btn-light btn-lg" onclick="showStudentLoginPage()">Student Login</button>
+                                <button class="btn btn-outline-light btn-lg" onclick="showTeacherLoginPage()">Teacher Login</button>
                                 <button class="btn btn-outline-warning btn-lg" onclick="showAdminLoginPage()">Admin Login</button>
                             </div>
                         </div>
@@ -258,27 +258,58 @@
             </section>
         </div>
 
-        <!-- Login Page -->
-        <div id="loginPage" class="hidden">
+        <!-- Student Login Page -->
+        <div id="studentLoginPage" class="hidden">
             <div class="container py-5">
                 <div class="row justify-content-center">
                     <div class="col-md-6 col-lg-4">
                         <div class="card shadow">
                             <div class="card-body">
-                                <h3 class="card-title text-center mb-4">Login</h3>
-                                <form id="loginForm">
+                                <h3 class="card-title text-center mb-4">Student Login</h3>
+                                <form id="studentLoginForm">
                                     <div class="mb-3">
-                                        <label for="loginUsername" class="form-label">Username</label>
-                                        <input type="text" class="form-control" id="loginUsername" required>
+                                        <label for="studentEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="studentEmail" required>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="loginPassword" class="form-label">Password</label>
-                                        <input type="password" class="form-control" id="loginPassword" required>
+                                        <label for="studentPassword" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="studentPassword" required>
                                     </div>
-                                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                                    <button type="submit" class="btn btn-primary w-100">Student Login</button>
                                 </form>
                                 <div class="text-center mt-3">
-                                    <p>Don't have an account? <a href="#" onclick="showRegisterPage()">Register here</a></p>
+                                    <p>Don't have an account? <a href="#" onclick="showStudentRegisterPage()">Register as Student</a></p>
+                                    <p><a href="#" onclick="showHomePage()">Back to Home</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Login Page -->
+        <div id="teacherLoginPage" class="hidden">
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <h3 class="card-title text-center mb-4">Teacher Login</h3>
+                                <form id="teacherLoginForm">
+                                    <div class="mb-3">
+                                        <label for="teacherEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="teacherEmail" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="teacherPassword" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="teacherPassword" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-success w-100">Teacher Login</button>
+                                </form>
+                                <div class="text-center mt-3">
+                                    <p>Don't have an account? <a href="#" onclick="showTeacherRegisterPage()">Register as Teacher</a></p>
+                                    <p><a href="#" onclick="showHomePage()">Back to Home</a></p>
                                 </div>
                             </div>
                         </div>
@@ -299,14 +330,14 @@
                                 <!-- Admin Credentials Display -->
                                 <div class="alert alert-info mb-4">
                                     <h5 class="alert-heading">Test Admin Credentials</h5>
-                                    <p class="mb-2"><strong>Username:</strong> admin</p>
+                                    <p class="mb-2"><strong>Email:</strong> admin@freelancemusic.com</p>
                                     <p class="mb-0"><strong>Password:</strong> admin123</p>
                                 </div>
                                 
                                 <form id="adminLoginForm">
                                     <div class="mb-3">
-                                        <label for="adminUsername" class="form-label">Username</label>
-                                        <input type="text" class="form-control" id="adminUsername" value="admin" required>
+                                        <label for="adminEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="adminEmail" value="admin@freelancemusic.com" required>
                                     </div>
                                     <div class="mb-3">
                                         <label for="adminPassword" class="form-label">Password</label>
@@ -328,25 +359,26 @@
         <div id="registerPage" class="hidden">
             <div class="container py-5">
                 <div class="row justify-content-center">
-                    <div class="col-md-6 col-lg-4">
+                    <div class="col-md-8 col-lg-6">
                         <div class="card shadow">
                             <div class="card-body">
                                 <h3 class="card-title text-center mb-4">Register</h3>
                                 <form id="registerForm">
+                                    <!-- Basic Information -->
                                     <div class="mb-3">
-                                        <label for="registerUsername" class="form-label">Username</label>
-                                        <input type="text" class="form-control" id="registerUsername" required>
+                                        <label for="registerName" class="form-label">Full Name *</label>
+                                        <input type="text" class="form-control" id="registerName" required>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="registerEmail" class="form-label">Email</label>
+                                        <label for="registerEmail" class="form-label">Email Address *</label>
                                         <input type="email" class="form-control" id="registerEmail" required>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="registerPassword" class="form-label">Password</label>
+                                        <label for="registerPassword" class="form-label">Password *</label>
                                         <input type="password" class="form-control" id="registerPassword" required>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="registerRole" class="form-label">Role</label>
+                                        <label for="registerRole" class="form-label">Role *</label>
                                         <select class="form-select" id="registerRole" required onchange="toggleStudentFields()">
                                             <option value="">Select Role</option>
                                             <option value="Teacher">Teacher</option>
@@ -357,25 +389,29 @@
                                     <!-- Student-specific fields -->
                                     <div id="studentFields" style="display: none;">
                                         <hr>
-                                        <h6 class="text-primary">Student Information</h6>
-                                        <div class="mb-3">
-                                            <label for="registerStudentName" class="form-label">Full Name</label>
-                                            <input type="text" class="form-control" id="registerStudentName" placeholder="Enter your full name">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="registerStudentEmail" class="form-label">Email Address</label>
-                                            <input type="email" class="form-control" id="registerStudentEmail" placeholder="Enter your email address">
-                                        </div>
+                                        <h6 class="text-primary">Student Information (Optional)</h6>
                                         <div class="mb-3">
                                             <label for="registerStudentInstrument" class="form-label">Primary Instrument</label>
-                                            <select class="form-select" id="registerStudentInstrument">
-                                                <option value="">Select Instrument</option>
-                                                <option value="Piano">Piano</option>
-                                                <option value="Guitar">Guitar</option>
-                                                <option value="Violin">Violin</option>
-                                                <option value="Drums">Drums</option>
-                                                <option value="Voice/Singing">Voice/Singing</option>
-                                            </select>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="studentInstrument" id="studentPiano" value="Piano">
+                                                <label class="form-check-label" for="studentPiano">Piano</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="studentInstrument" id="studentGuitar" value="Guitar">
+                                                <label class="form-check-label" for="studentGuitar">Guitar</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="studentInstrument" id="studentViolin" value="Violin">
+                                                <label class="form-check-label" for="studentViolin">Violin</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="studentInstrument" id="studentDrums" value="Drums">
+                                                <label class="form-check-label" for="studentDrums">Drums</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="studentInstrument" id="studentVoice" value="Voice/Singing">
+                                                <label class="form-check-label" for="studentVoice">Voice/Singing</label>
+                                            </div>
                                         </div>
                                         <div class="mb-3">
                                             <label for="registerStudentLevel" class="form-label">Experience Level</label>
@@ -388,10 +424,48 @@
                                         </div>
                                     </div>
                                     
+                                    <!-- Teacher-specific fields -->
+                                    <div id="teacherFields" style="display: none;">
+                                        <hr>
+                                        <h6 class="text-success">Teacher Information (Optional)</h6>
+                                        <div class="mb-3">
+                                            <label for="registerTeacherRate" class="form-label">Hourly Rate ($)</label>
+                                            <input type="number" class="form-control" id="registerTeacherRate" placeholder="e.g., 50" step="0.01">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="registerTeacherDescription" class="form-label">Description/Bio</label>
+                                            <textarea class="form-control" id="registerTeacherDescription" rows="3" placeholder="Tell students about your teaching experience and style..."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="registerTeacherInstruments" class="form-label">Instruments You Teach</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="teacherInstruments" id="teacherPiano" value="Piano">
+                                                <label class="form-check-label" for="teacherPiano">Piano</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="teacherInstruments" id="teacherGuitar" value="Guitar">
+                                                <label class="form-check-label" for="teacherGuitar">Guitar</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="teacherInstruments" id="teacherViolin" value="Violin">
+                                                <label class="form-check-label" for="teacherViolin">Violin</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="teacherInstruments" id="teacherDrums" value="Drums">
+                                                <label class="form-check-label" for="teacherDrums">Drums</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="teacherInstruments" id="teacherVoice" value="Voice/Singing">
+                                                <label class="form-check-label" for="teacherVoice">Voice/Singing</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <button type="submit" class="btn btn-primary w-100">Register</button>
                                 </form>
                                 <div class="text-center mt-3">
-                                    <p>Already have an account? <a href="#" onclick="showLoginPage()">Login here</a></p>
+                                    <p>Already have an account? <a href="#" onclick="showStudentLoginPage()">Student Login</a> | <a href="#" onclick="showTeacherLoginPage()">Teacher Login</a></p>
+                                    <p><a href="#" onclick="showHomePage()">Back to Home</a></p>
                                 </div>
                             </div>
                         </div>
@@ -673,7 +747,7 @@
                 <!-- Teacher Navigation -->
                 <ul class="nav nav-tabs mb-4" id="teacherTabs">
                     <li class="nav-item">
-                        <a class="nav-link active" data-bs-toggle="tab" href="#teacherProfile">My Profile</a>
+                        <a class="nav-link active" data-bs-toggle="tab" href="#teacherProfile">Edit Profile</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#teacherAvailability">Availability</a>
@@ -698,42 +772,32 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label for="teacherName" class="form-label">Name</label>
-                                                <input type="text" class="form-control" id="teacherName" placeholder="logan" required>
+                                                <label for="teacherName" class="form-label">Name *</label>
+                                                <input type="text" class="form-control" id="teacherName" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="teacherBio" class="form-label">Description</label>
-                                                <textarea class="form-control" id="teacherBio" rows="4" placeholder="Tell students about your teaching experience, musical background, and what makes you unique..."></textarea>
+                                                <label for="teacherProfileEmail" class="form-label">Email Address *</label>
+                                                <input type="email" class="form-control" id="teacherProfileEmail" readonly>
+                                                <div class="form-text">Email cannot be changed</div>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label for="defaultLessonCost" class="form-label">Default Cost Per Lesson ($)</label>
-                                                <input type="number" class="form-control" id="defaultLessonCost" step="0.01" placeholder="50.00" required>
-                                                <div class="form-text">Your standard rate for lessons. You can adjust this for individual bookings.</div>
+                                                <label for="defaultLessonCost" class="form-label">Hourly Rate ($)</label>
+                                                <input type="number" class="form-control" id="defaultLessonCost" step="0.01" placeholder="50.00">
                                             </div>
                                             <div class="mb-3">
-                                                <label for="teacherContact" class="form-label">Contact Info</label>
-                                                <input type="text" class="form-control" id="teacherContact" placeholder="your.email@example.com">
+                                                <label for="teacherBio" class="form-label">Description/Bio</label>
+                                                <textarea class="form-control" id="teacherBio" rows="4" placeholder="Tell students about your teaching experience and style..."></textarea>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-md-12">
                                             <div class="mb-3">
-                                                <label for="teacherInstruments" class="form-label">Instruments Taught</label>
+                                                <label for="teacherInstruments" class="form-label">Instruments You Teach</label>
                                                 <div id="instrumentsCheckboxes">
-                                                    <!-- Instruments will be loaded here -->
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="teacherPhoto" class="form-label">Profile Photo</label>
-                                                <input type="file" class="form-control" id="teacherPhoto" accept="image/*">
-                                                <div class="form-text">Upload a professional photo to help students connect with you</div>
-                                                <div id="photoPreview" class="mt-2" style="display: none;">
-                                                    <img id="previewImage" src="" alt="Profile Preview" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                                                    <!-- Instruments will be loaded here dynamically -->
                                                 </div>
                                             </div>
                                         </div>
@@ -998,8 +1062,8 @@
                                                 <input type="text" class="form-control" id="studentName" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="studentEmail" class="form-label">Email Address</label>
-                                                <input type="email" class="form-control" id="studentEmail" required>
+                                                <label for="studentProfileEmail" class="form-label">Email Address</label>
+                                                <input type="email" class="form-control" id="studentProfileEmail" required>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="studentContact" class="form-label">Contact Info</label>
@@ -1009,14 +1073,26 @@
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label for="studentInstrument" class="form-label">Primary Instrument</label>
-                                                <select class="form-select" id="studentInstrument" required>
-                                                    <option value="">Select Instrument</option>
-                                                    <option value="Piano">Piano</option>
-                                                    <option value="Guitar">Guitar</option>
-                                                    <option value="Violin">Violin</option>
-                                                    <option value="Drums">Drums</option>
-                                                    <option value="Voice/Singing">Voice/Singing</option>
-                                                </select>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="studentProfileInstrument" id="studentProfilePiano" value="Piano">
+                                                    <label class="form-check-label" for="studentProfilePiano">Piano</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="studentProfileInstrument" id="studentProfileGuitar" value="Guitar">
+                                                    <label class="form-check-label" for="studentProfileGuitar">Guitar</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="studentProfileInstrument" id="studentProfileViolin" value="Violin">
+                                                    <label class="form-check-label" for="studentProfileViolin">Violin</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="studentProfileInstrument" id="studentProfileDrums" value="Drums">
+                                                    <label class="form-check-label" for="studentProfileDrums">Drums</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="studentProfileInstrument" id="studentProfileVoice" value="Voice/Singing">
+                                                    <label class="form-check-label" for="studentProfileVoice">Voice/Singing</label>
+                                                </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="studentLevel" class="form-label">Experience Level</label>

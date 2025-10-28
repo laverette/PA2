@@ -1,0 +1,21 @@
+{
+  "name": "freelance-music-frontend",
+  "version": "1.0.0",
+  "description": "Freelance Music Platform Frontend",
+  "main": "index.html",
+  "scripts": {
+    "start": "concurrently \"npm run frontend\" \"npm run backend\"",
+    "frontend": "http-server -p 8080 -c-1 --cors",
+    "backend": "cd api && dotnet run --urls=\"http://localhost:5000\"",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\"",
+    "build": "echo 'No build step needed for static site'",
+    "serve": "http-server -p 8080 -c-1 --cors"
+  },
+  "keywords": ["music", "education", "platform"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "concurrently": "^8.2.2"
+  }
+}

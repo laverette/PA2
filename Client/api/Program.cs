@@ -54,55 +54,62 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Create clean database
+// Create clean database for localhost development
 var connectionString = "Data Source=freelancemusic.db";
 using var connection = new SqliteConnection(connectionString);
 connection.Open();
 
-// Create simple, working tables
+// Create simple, working tables (EMAIL-BASED AUTHENTICATION)
 connection.Execute(@"
     CREATE TABLE IF NOT EXISTS Users (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
-        Username TEXT UNIQUE NOT NULL,
+        Email TEXT UNIQUE NOT NULL,
         PasswordHash TEXT NOT NULL,
-        Role TEXT NOT NULL
+        Role TEXT NOT NULL,
+        CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
 // Create admin user if it doesn't exist
-var adminExists = connection.QuerySingleOrDefault<int>("SELECT COUNT(*) FROM Users WHERE Username = 'admin'");
+var adminExists = connection.QuerySingleOrDefault<int>("SELECT COUNT(*) FROM Users WHERE Email = 'admin@freelancemusic.com'");
 if (adminExists == 0)
 {
     var adminPasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123");
-    connection.Execute("INSERT INTO Users (Username, PasswordHash, Role) VALUES ('admin', @PasswordHash, 'Admin')", 
+    connection.Execute("INSERT INTO Users (Email, PasswordHash, Role) VALUES ('admin@freelancemusic.com', @PasswordHash, 'Admin')", 
         new { PasswordHash = adminPasswordHash });
-    Console.WriteLine("Admin user created: admin/admin123");
+    Console.WriteLine("Admin user created: admin@freelancemusic.com/admin123");
 }
 
-// Clean, structured database schema
+// COMPREHENSIVE DATABASE SCHEMA - Supports ALL Functionalities
+
+// Teachers table - Teacher profiles and data (Name, Email required)
 connection.Execute(@"
     CREATE TABLE IF NOT EXISTS Teachers (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
         UserId INTEGER NOT NULL,
         Name TEXT NOT NULL,
-        Bio TEXT,
-        HourlyRate DECIMAL(10,2) NOT NULL,
-        ContactInfo TEXT,
+        Email TEXT NOT NULL,
+        HourlyRate DECIMAL(10,2),
+        Description TEXT,
+        Instruments TEXT,
         PhotoUrl TEXT,
         CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
     )");
 
+// Students table - Student profiles and data (Name, Email required)
 connection.Execute(@"
     CREATE TABLE IF NOT EXISTS Students (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
         UserId INTEGER NOT NULL,
         Name TEXT NOT NULL,
-        ContactInfo TEXT,
-        PaymentInfo TEXT,
+        Email TEXT NOT NULL,
+        Instrument TEXT,
+        Level TEXT,
         CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
     )");
 
+// Instruments table - Available instruments for teaching
 connection.Execute(@"
     CREATE TABLE IF NOT EXISTS Instruments (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -111,6 +118,7 @@ connection.Execute(@"
         CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
+// TeacherInstruments - Many-to-many: Teachers teach multiple instruments
 connection.Execute(@"
     CREATE TABLE IF NOT EXISTS TeacherInstruments (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -123,6 +131,7 @@ connection.Execute(@"
         UNIQUE(TeacherId, InstrumentId)
     )");
 
+// AvailabilitySlots - When teachers are available for lessons
 connection.Execute(@"
     CREATE TABLE IF NOT EXISTS AvailabilitySlots (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -138,6 +147,7 @@ connection.Execute(@"
         FOREIGN KEY (TeacherId) REFERENCES Teachers(Id) ON DELETE CASCADE
     )");
 
+// Lessons - Booked lessons between teachers and students
 connection.Execute(@"
     CREATE TABLE IF NOT EXISTS Lessons (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -157,6 +167,7 @@ connection.Execute(@"
         FOREIGN KEY (StudentId) REFERENCES Students(Id) ON DELETE SET NULL
     )");
 
+// Payments - Payment records for revenue tracking
 connection.Execute(@"
     CREATE TABLE IF NOT EXISTS Payments (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -168,6 +179,16 @@ connection.Execute(@"
         ProcessedAt DATETIME,
         CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (LessonId) REFERENCES Lessons(Id) ON DELETE CASCADE
+    )");
+
+// ReferralSources - For admin dashboard referral tracking
+connection.Execute(@"
+    CREATE TABLE IF NOT EXISTS ReferralSources (
+        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+        SourceName TEXT NOT NULL,
+        UserId INTEGER,
+        CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE SET NULL
     )");
 
 // Insert default instruments
@@ -182,6 +203,53 @@ connection.Execute(@"
 
 // Health check
 app.MapGet("/api/health", () => Results.Ok(new { status = "API is running", timestamp = DateTime.UtcNow }));
+
+// Get teacher's lessons
+app.MapGet("/api/teachers/my-lessons", (HttpContext context) =>
+{
+    try
+    {
+        Console.WriteLine("DEBUG: My lessons endpoint called");
+        var userId = GetUserId(context);
+        Console.WriteLine($"DEBUG: User ID from token: {userId}");
+        if (userId == null) 
+        {
+            Console.WriteLine("DEBUG: No user ID found, returning unauthorized");
+            return Results.Unauthorized();
+        }
+
+        using var conn = new SqliteConnection(connectionString);
+        
+        // Get teacher profile
+        var teacher = conn.QueryFirstOrDefault("SELECT Id FROM Teachers WHERE UserId = @UserId", new { UserId = userId });
+        if (teacher == null) return Results.NotFound(new { message = "Teacher profile not found" });
+
+        // Get lessons for this teacher
+        var lessons = conn.Query(@"
+            SELECT 
+                Id,
+                StudentName,
+                Instrument,
+                LessonDate,
+                StartTime,
+                EndTime,
+                LessonType,
+                TotalCost,
+                Status,
+                Notes
+            FROM Lessons 
+            WHERE TeacherId = @TeacherId
+            ORDER BY LessonDate DESC, StartTime DESC
+        ", new { TeacherId = teacher.Id }).ToList();
+
+        return Results.Ok(lessons);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error loading teacher lessons: {ex.Message}");
+        return Results.BadRequest(new { message = "Failed to load lessons: " + ex.Message });
+    }
+});
 
 // Debug endpoint to see what data is being sent
 app.MapPost("/api/debug-availability", async (HttpContext context) =>
@@ -209,17 +277,17 @@ app.MapPost("/api/auth/login", async (LoginRequest request) =>
     {
         using var conn = new SqliteConnection(connectionString);
         var user = await conn.QueryFirstOrDefaultAsync<dynamic>(
-            "SELECT Id, Username, PasswordHash, Role FROM Users WHERE Username = @Username",
-            new { Username = request.Username }
+            "SELECT Id, Email, PasswordHash, Role FROM Users WHERE Email = @Email",
+            new { Email = request.Email }
         );
         
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
-            return Results.BadRequest(new { message = "Invalid username or password" });
+            return Results.BadRequest(new { message = "Invalid email or password" });
         }
         
-        var token = GenerateJwtToken((int)user.Id, user.Username, user.Role);
-        return Results.Ok(new { token = token, role = user.Role, userId = user.Id });
+        var token = GenerateJwtToken((int)(long)user.Id, user.Email, user.Role);
+        return Results.Ok(new { token = token, role = user.Role, userId = (int)(long)user.Id });
     }
     catch (Exception ex)
     {
@@ -227,32 +295,61 @@ app.MapPost("/api/auth/login", async (LoginRequest request) =>
     }
 });
 
-// Simple register
+// Register with profile creation
 app.MapPost("/api/auth/register", async (RegisterRequest request) =>
 {
     try
     {
         using var conn = new SqliteConnection(connectionString);
         
-        // Check if username exists
+        // Check if email exists
         var existingUser = await conn.QueryFirstOrDefaultAsync<dynamic>(
-            "SELECT Id FROM Users WHERE Username = @Username",
-            new { Username = request.Username }
+            "SELECT Id FROM Users WHERE Email = @Email",
+            new { Email = request.Email }
         );
         
         if (existingUser != null)
         {
-            return Results.BadRequest(new { message = "Username already exists" });
+            return Results.BadRequest(new { message = "Email already exists" });
         }
         
         // Create user
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
         var userId = await conn.QuerySingleAsync<int>(
-            "INSERT INTO Users (Username, PasswordHash, Role) VALUES (@Username, @PasswordHash, @Role); SELECT last_insert_rowid();",
-            new { Username = request.Username, PasswordHash = passwordHash, Role = request.Role }
+            "INSERT INTO Users (Email, PasswordHash, Role) VALUES (@Email, @PasswordHash, @Role); SELECT last_insert_rowid();",
+            new { Email = request.Email, PasswordHash = passwordHash, Role = request.Role }
         );
         
-        var token = GenerateJwtToken(userId, request.Username, request.Role);
+        // Create profile based on role
+        if (request.Role == "Teacher")
+        {
+            await conn.ExecuteAsync(@"
+                INSERT INTO Teachers (UserId, Name, Email, HourlyRate, Description, Instruments) 
+                VALUES (@UserId, @Name, @Email, @HourlyRate, @Description, @Instruments)",
+                new { 
+                    UserId = userId, 
+                    Name = request.Name, 
+                    Email = request.Email,
+                    HourlyRate = string.IsNullOrEmpty(request.HourlyRate) ? (decimal?)null : decimal.Parse(request.HourlyRate),
+                    Description = request.Description,
+                    Instruments = request.Instruments
+                });
+        }
+        else if (request.Role == "Student")
+        {
+            await conn.ExecuteAsync(@"
+                INSERT INTO Students (UserId, Name, Email, Instrument, Level) 
+                VALUES (@UserId, @Name, @Email, @Instrument, @Level)",
+                new { 
+                    UserId = userId, 
+                    Name = request.Name, 
+                    Email = request.Email,
+                    Instrument = request.Instrument,
+                    Level = request.Level
+                });
+        }
+        
+        var token = GenerateJwtToken(userId, request.Email, request.Role);
         return Results.Ok(new { token = token, role = request.Role, userId = userId });
     }
     catch (Exception ex)
@@ -266,48 +363,57 @@ app.MapGet("/api/teachers/my-profile", (HttpContext context) =>
 {
     try
     {
+        Console.WriteLine("DEBUG: My profile endpoint called");
         var userId = GetUserId(context);
-        if (userId == null) return Results.Unauthorized();
+        Console.WriteLine($"DEBUG: User ID: {userId}");
+        
+        if (userId == null) 
+        {
+            Console.WriteLine("DEBUG: User ID is null, returning unauthorized");
+            return Results.Unauthorized();
+        }
 
         using var conn = new SqliteConnection(connectionString);
         var profile = conn.QueryFirstOrDefault(@"
-            SELECT Id, Name, Bio, HourlyRate as DefaultLessonCost, ContactInfo 
+            SELECT Id, Name, Email, HourlyRate, Description, Instruments 
             FROM Teachers 
             WHERE UserId = @UserId", new { UserId = userId });
 
+        Console.WriteLine($"DEBUG: Profile found: {profile != null}");
+        if (profile != null)
+        {
+            Console.WriteLine($"DEBUG: Profile data - Name: {profile.Name}, Email: {profile.Email}, HourlyRate: {profile.HourlyRate}");
+        }
+
         if (profile == null)
         {
+            Console.WriteLine("DEBUG: No profile found, returning empty profile");
             return Results.Ok(new
             {
                 Id = 0,
                 Name = "",
-                Bio = "",
-                DefaultLessonCost = 0.00m,
-                ContactInfo = "",
-                Instruments = new object[0]
+                Email = "",
+                HourlyRate = 0.00m,
+                Description = "",
+                Instruments = ""
             });
         }
 
-        // Get the teacher's instruments
-        var instruments = conn.Query(@"
-            SELECT i.Id, i.Name
-            FROM TeacherInstruments ti
-            INNER JOIN Instruments i ON ti.InstrumentId = i.Id
-            WHERE ti.TeacherId = @TeacherId
-        ", new { TeacherId = profile.Id }).ToList();
-
+        Console.WriteLine("DEBUG: Returning profile data");
         return Results.Ok(new
         {
             Id = profile.Id,
             Name = profile.Name,
-            Bio = profile.Bio,
-            DefaultLessonCost = profile.DefaultLessonCost,
-            ContactInfo = profile.ContactInfo,
-            Instruments = instruments
+            Email = profile.Email,
+            HourlyRate = profile.HourlyRate ?? 0.00m,
+            Description = profile.Description ?? "",
+            Instruments = profile.Instruments ?? ""
         });
     }
     catch (Exception ex)
     {
+        Console.WriteLine($"DEBUG: Exception in my-profile endpoint: {ex.Message}");
+        Console.WriteLine($"DEBUG: Stack trace: {ex.StackTrace}");
         return Results.BadRequest(new { message = "Failed to load profile: " + ex.Message });
     }
 });
@@ -316,31 +422,25 @@ app.MapPost("/api/teachers/profile", async (HttpContext context) =>
 {
     try
     {
+        Console.WriteLine("DEBUG: Teacher profile endpoint called");
         var userId = GetUserId(context);
-        if (userId == null) return Results.Unauthorized();
+        Console.WriteLine($"DEBUG: User ID from token: {userId}");
+        if (userId == null) 
+        {
+            Console.WriteLine("DEBUG: No user ID found, returning unauthorized");
+            return Results.Unauthorized();
+        }
 
         using var conn = new SqliteConnection(connectionString);
-        var form = await context.Request.ReadFormAsync();
         
-        var name = form["name"].ToString();
-        var bio = form["bio"].ToString();
-        var defaultLessonCost = decimal.Parse(form["defaultLessonCost"].ToString());
-        var contactInfo = form["contactInfo"].ToString();
-        var instrumentIdsJson = form["instrumentIds"].ToString();
+        // Read JSON data
+        var request = await context.Request.ReadFromJsonAsync<dynamic>();
         
-        // Parse the instrument IDs
-        var instrumentIds = new List<int>();
-        if (!string.IsNullOrEmpty(instrumentIdsJson))
-        {
-            try
-            {
-                instrumentIds = System.Text.Json.JsonSerializer.Deserialize<List<int>>(instrumentIdsJson);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error parsing instrument IDs: {ex.Message}");
-            }
-        }
+        var name = request?.GetProperty("name").GetString();
+        var email = request?.GetProperty("email").GetString();
+        var hourlyRate = request?.GetProperty("hourlyRate").GetDecimal();
+        var description = request?.GetProperty("description").GetString();
+        var instruments = request?.GetProperty("instruments").GetString();
 
         // Check if profile exists
         var existingProfile = conn.QueryFirstOrDefault(@"
@@ -350,9 +450,9 @@ app.MapPost("/api/teachers/profile", async (HttpContext context) =>
         if (existingProfile == null)
         {
             conn.Execute(@"
-                INSERT INTO Teachers (UserId, Name, Bio, HourlyRate, ContactInfo)
-                VALUES (@UserId, @Name, @Bio, @DefaultLessonCost, @ContactInfo)",
-                new { UserId = userId, Name = name, Bio = bio, DefaultLessonCost = defaultLessonCost, ContactInfo = contactInfo });
+                INSERT INTO Teachers (UserId, Name, Email, HourlyRate, Description, Instruments)
+                VALUES (@UserId, @Name, @Email, @HourlyRate, @Description, @Instruments)",
+                new { UserId = userId, Name = name, Email = email, HourlyRate = hourlyRate, Description = description, Instruments = instruments });
             
             teacherId = conn.QuerySingle<int>("SELECT Id FROM Teachers WHERE UserId = @UserId", new { UserId = userId });
         }
@@ -360,34 +460,19 @@ app.MapPost("/api/teachers/profile", async (HttpContext context) =>
         {
             conn.Execute(@"
                 UPDATE Teachers 
-                SET Name = @Name, Bio = @Bio, HourlyRate = @DefaultLessonCost, ContactInfo = @ContactInfo
+                SET Name = @Name, Email = @Email, HourlyRate = @HourlyRate, Description = @Description, Instruments = @Instruments
                 WHERE UserId = @UserId",
-                new { UserId = userId, Name = name, Bio = bio, DefaultLessonCost = defaultLessonCost, ContactInfo = contactInfo });
+                new { UserId = userId, Name = name, Email = email, HourlyRate = hourlyRate, Description = description, Instruments = instruments });
             
             teacherId = existingProfile.Id;
         }
 
-        // Handle instruments
-        if (instrumentIds.Count > 0)
-        {
-            // Remove existing instrument associations
-            conn.Execute("DELETE FROM TeacherInstruments WHERE TeacherId = @TeacherId", new { TeacherId = teacherId });
-            
-            // Add new instrument associations
-            foreach (var instrumentId in instrumentIds)
-            {
-                conn.Execute(@"
-                    INSERT INTO TeacherInstruments (TeacherId, InstrumentId) 
-                    VALUES (@TeacherId, @InstrumentId)",
-                    new { TeacherId = teacherId, InstrumentId = instrumentId });
-            }
-        }
-
-        return Results.Ok(new { message = "Profile saved successfully" });
+        return Results.Ok(new { message = "Profile updated successfully" });
     }
     catch (Exception ex)
     {
-        return Results.BadRequest(new { message = "Failed to save profile: " + ex.Message });
+        Console.WriteLine($"Error updating teacher profile: {ex.Message}");
+        return Results.BadRequest(new { message = "Failed to update profile: " + ex.Message });
     }
 });
 
@@ -512,49 +597,6 @@ app.MapPost("/api/teachers/availability", async (HttpContext context) =>
 });
 
 // Lessons endpoints
-app.MapGet("/api/teachers/my-lessons", (HttpContext context) =>
-{
-    try
-    {
-        var userId = GetUserId(context);
-        if (userId == null) return Results.Unauthorized();
-
-        using var conn = new SqliteConnection(connectionString);
-        var teacherProfile = conn.QueryFirstOrDefault(@"
-            SELECT Id FROM Teachers WHERE UserId = @UserId", new { UserId = userId });
-        
-        if (teacherProfile == null)
-        {
-            return Results.Ok(new object[0]);
-        }
-
-        var lessons = conn.Query(@"
-            SELECT Id, StudentName, Instrument, LessonDate, StartTime, EndTime, 
-                   LessonType, Cost as TotalCost, Status, Notes
-            FROM Lessons 
-            WHERE TeacherId = @TeacherId
-            ORDER BY LessonDate, StartTime",
-            new { TeacherId = teacherProfile.Id });
-
-        var formattedLessons = lessons.Select(lesson => new
-        {
-            Id = lesson.Id,
-            Student = new { Name = lesson.StudentName, ContactInfo = "student@example.com" },
-            Instrument = new { Name = lesson.Instrument },
-            LessonType = lesson.LessonType,
-            TotalCost = lesson.TotalCost,
-            Status = lesson.Status,
-            AvailabilitySlot = new { Date = lesson.LessonDate, StartTime = lesson.StartTime, EndTime = lesson.EndTime },
-            Notes = lesson.Notes
-        });
-
-        return Results.Ok(formattedLessons);
-    }
-    catch (Exception ex)
-    {
-        return Results.BadRequest(new { message = "Failed to load lessons: " + ex.Message });
-    }
-});
 
 app.MapPost("/api/teachers/schedule-lesson", async (HttpContext context) =>
 {
@@ -1203,8 +1245,8 @@ app.MapGet("/api/students/my-profile", (HttpContext context) =>
 app.Run();
 
 // Request/Response models
-public record LoginRequest(string Username, string Password);
-public record RegisterRequest(string Username, string Password, string Role);
+public record LoginRequest(string Email, string Password);
+public record RegisterRequest(string Email, string Password, string Role, string Name, string? HourlyRate, string? Description, string? Instruments, string? Instrument, string? Level);
 public record AvailabilityRequest(string? Date, string? StartTime, string? EndTime, bool IsVirtual, decimal Cost, string? Notes);
 public record ScheduleLessonRequest(string? StudentName, string? Instrument, string? LessonDate, string? LessonTime, int Duration, string? LessonType, decimal Cost, string? Notes);
 public record StudentProfileRequest(string Name, string ContactInfo, string PaymentInfo);

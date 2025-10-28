@@ -2,66 +2,278 @@
 // Global variables
 let currentUser = null;
 let authToken = null;
+
+// Configurable API Base URL - Configured for localhost development
 const API_BASE_URL = 'http://localhost:5000/api';
+console.log('🌐 LOCALHOST CONFIGURATION:');
+console.log('Frontend: http://localhost:8080');
+console.log('Backend API:', API_BASE_URL);
+console.log('Database: freelancemusic.db (SQLite)');
+
+let isShowingDashboard = false; // Prevent multiple dashboard calls
+let isInitialized = false; // Prevent multiple initializations
+
+// Debug counters
+let apiCallCount = 0;
+let loadTeacherDataCallCount = 0;
+let showTeacherDashboardCallCount = 0;
+
+// Debug function to check current state
+function debugTeacherState() {
+    console.log('=== TEACHER DEBUG STATE ===');
+    console.log('API Call Count:', apiCallCount);
+    console.log('Load Teacher Data Call Count:', loadTeacherDataCallCount);
+    console.log('Show Teacher Dashboard Call Count:', showTeacherDashboardCallCount);
+    console.log('Teacher Data Loaded:', teacherDataLoaded);
+    console.log('Is Loading Teacher Data:', isLoadingTeacherData);
+    console.log('Teacher Data Load Promise:', !!teacherDataLoadPromise);
+    console.log('Is Showing Dashboard:', isShowingDashboard);
+    console.log('Current User:', currentUser);
+    console.log('=== END DEBUG STATE ===');
+}
+
+// Reset debug counters
+function resetDebugCounters() {
+    apiCallCount = 0;
+    loadTeacherDataCallCount = 0;
+    showTeacherDashboardCallCount = 0;
+    console.log('Debug counters reset');
+}
+
+// Test API connection
+async function testApiConnection() {
+    try {
+        console.log('Testing API connection to:', API_BASE_URL);
+        const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/health`);
+        if (response.ok) {
+            const data = await response.json();
+            console.log('API connection successful:', data);
+            return true;
+        } else {
+            console.error('API connection failed:', response.status, response.statusText);
+            return false;
+        }
+    } catch (error) {
+        console.error('API connection error:', error);
+        return false;
+    }
+}
+
+// Make debug functions available globally
+window.debugTeacherState = debugTeacherState;
+window.resetDebugCounters = resetDebugCounters;
+window.testApiConnection = testApiConnection;
+
+// Add debugging for page navigation/refresh events
+window.addEventListener('beforeunload', function(event) {
+    console.log('=== PAGE ABOUT TO RELOAD/NAVIGATE ===');
+    console.log('Event:', event);
+    console.log('Current URL:', window.location.href);
+    console.log('Current user:', currentUser);
+    console.log('=== END PAGE RELOAD DEBUG ===');
+});
+
+window.addEventListener('unload', function(event) {
+    console.log('=== PAGE UNLOADING ===');
+    console.log('Event:', event);
+    console.log('=== END PAGE UNLOAD DEBUG ===');
+});
+
+// Track any form submissions that might cause navigation
+document.addEventListener('submit', function(event) {
+    console.log('=== FORM SUBMISSION DETECTED ===');
+    console.log('Form:', event.target);
+    console.log('Form action:', event.target.action);
+    console.log('Form method:', event.target.method);
+    console.log('=== END FORM SUBMISSION DEBUG ===');
+});
+
+// Track any clicks that might cause navigation
+document.addEventListener('click', function(event) {
+    const target = event.target;
+    if (target.tagName === 'A' || target.tagName === 'BUTTON' || target.onclick) {
+        console.log('=== CLICK DETECTED ===');
+        console.log('Target:', target);
+        console.log('Tag name:', target.tagName);
+        console.log('Href:', target.href);
+        console.log('Onclick:', target.onclick);
+        console.log('=== END CLICK DEBUG ===');
+    }
+});
+
+// Global error handler to prevent page refreshes
+window.addEventListener('error', function(event) {
+    console.error('Global error caught:', event.error);
+    console.error('Error details:', event.error?.message);
+    console.error('Error stack:', event.error?.stack);
+    // Prevent the error from causing a page refresh
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+});
+
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    console.error('Promise rejection details:', event.reason?.message);
+    console.error('Promise rejection stack:', event.reason?.stack);
+    // Prevent the rejection from causing a page refresh
+    event.preventDefault();
+    return false;
+});
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== DOM CONTENT LOADED ===');
+    console.log('isInitialized:', isInitialized);
+    
+    if (isInitialized) {
+        console.log('Already initialized, skipping...');
+        return;
+    }
+    
+    isInitialized = true;
+    console.log('Starting application initialization...');
+    
     // Check if user is already logged in
     const savedToken = localStorage.getItem('authToken');
     const savedUser = localStorage.getItem('currentUser');
     
+    console.log('Saved token exists:', !!savedToken);
+    console.log('Saved user exists:', !!savedUser);
+    
     if (savedToken && savedUser) {
         authToken = savedToken;
         currentUser = JSON.parse(savedUser);
+        console.log('User loaded from storage:', currentUser);
         updateNavigation();
+        // CRITICAL: Go directly to dashboard, NOT homepage
         showDashboard();
     } else {
+        console.log('No saved user, showing homepage');
         showHomePage();
     }
     
     // Set up form event listeners
     setupEventListeners();
+    console.log('=== DOM CONTENT LOADED END ===');
 });
 
 // Event Listeners
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
+    // Prevent ALL form submissions by default
+    document.addEventListener('submit', function(event) {
+        console.log('=== FORM SUBMISSION INTERCEPTED ===');
+        console.log('Form:', event.target);
+        console.log('Form ID:', event.target.id);
+        console.log('Preventing default submission...');
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+    });
+    
     // Login form
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    const studentLoginForm = document.getElementById('studentLoginForm');
+    if (studentLoginForm) {
+        studentLoginForm.addEventListener('submit', (e) => handleLogin(e, 'Student'));
+    }
+    
+    const teacherLoginForm = document.getElementById('teacherLoginForm');
+    if (teacherLoginForm) {
+        teacherLoginForm.addEventListener('submit', (e) => handleLogin(e, 'Teacher'));
+    }
     
     // Register form
-    document.getElementById('registerForm').addEventListener('submit', handleRegister);
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegister);
+        console.log('Register form event listener added');
+    } else {
+        console.error('Register form not found!');
+    }
     
     // Teacher profile form
-    document.getElementById('teacherProfileForm').addEventListener('submit', handleTeacherProfile);
+    const teacherProfileForm = document.getElementById('teacherProfileForm');
+    if (teacherProfileForm) {
+        teacherProfileForm.addEventListener('submit', handleTeacherProfile);
+        console.log('Teacher profile form event listener added');
+    }
     
     // Student profile form
-    document.getElementById('studentProfileForm').addEventListener('submit', handleStudentProfile);
+    const studentProfileForm = document.getElementById('studentProfileForm');
+    if (studentProfileForm) {
+        studentProfileForm.addEventListener('submit', handleStudentProfile);
+    }
     
     // Availability form
-    document.getElementById('availabilityForm').addEventListener('submit', handleAddAvailability);
+    const availabilityForm = document.getElementById('availabilityForm');
+    if (availabilityForm) {
+        availabilityForm.addEventListener('submit', handleAddAvailability);
+    }
     
-    // Teacher photo preview
-    document.getElementById('teacherPhoto').addEventListener('change', handlePhotoPreview);
+    // Teacher photo preview (only if element exists)
+    const teacherPhotoElement = document.getElementById('teacherPhoto');
+    if (teacherPhotoElement) {
+        teacherPhotoElement.addEventListener('change', handlePhotoPreview);
+    }
     
     // Schedule lesson form
-    document.getElementById('scheduleLessonForm').addEventListener('submit', handleScheduleLesson);
+    const scheduleLessonForm = document.getElementById('scheduleLessonForm');
+    if (scheduleLessonForm) {
+        scheduleLessonForm.addEventListener('submit', handleScheduleLesson);
+    }
     
     // Cost preview for lesson scheduling
-    document.getElementById('lessonCost').addEventListener('input', updateCostPreview);
-    document.getElementById('lessonDuration').addEventListener('change', updateCostSummary);
+    const lessonCostElement = document.getElementById('lessonCost');
+    if (lessonCostElement) {
+        lessonCostElement.addEventListener('input', updateCostPreview);
+    }
+    
+    const lessonDurationElement = document.getElementById('lessonDuration');
+    if (lessonDurationElement) {
+        lessonDurationElement.addEventListener('change', updateCostSummary);
+    }
     
     // Availability form enhancements
-    document.getElementById('availabilityStart').addEventListener('change', calculateEndTime);
-    document.getElementById('availabilityDuration').addEventListener('change', calculateEndTime);
-    document.getElementById('availabilityCost').addEventListener('input', loadDefaultAvailabilityCost);
+    const availabilityStartElement = document.getElementById('availabilityStart');
+    if (availabilityStartElement) {
+        availabilityStartElement.addEventListener('change', calculateEndTime);
+    }
+    
+    const availabilityDurationElement = document.getElementById('availabilityDuration');
+    if (availabilityDurationElement) {
+        availabilityDurationElement.addEventListener('change', calculateEndTime);
+    }
+    
+    const availabilityCostElement = document.getElementById('availabilityCost');
+    if (availabilityCostElement) {
+        availabilityCostElement.addEventListener('input', loadDefaultAvailabilityCost);
+    }
     
     // Lesson search and filtering
-    document.getElementById('lessonSearch').addEventListener('input', filterLessons);
-    document.getElementById('lessonStatusFilter').addEventListener('change', filterLessons);
+    const lessonSearchElement = document.getElementById('lessonSearch');
+    if (lessonSearchElement) {
+        lessonSearchElement.addEventListener('input', filterLessons);
+    }
+    
+    const lessonStatusFilterElement = document.getElementById('lessonStatusFilter');
+    if (lessonStatusFilterElement) {
+        lessonStatusFilterElement.addEventListener('change', filterLessons);
+    }
+    
+    console.log('Event listeners setup completed');
 }
 
 // Navigation Functions
-function showHomePage() {
+function showHomePage(event) {
+    if (event) {
+        event.preventDefault();
+    }
+    console.log('=== SHOW HOMEPAGE DEBUG ===');
+    console.log('showHomePage called - Stack trace:', new Error().stack);
+    console.log('Current user:', currentUser);
+    console.log('Event:', event);
     hideAllPages();
     document.getElementById('homePage').classList.remove('hidden');
     updateNavigation();
@@ -70,6 +282,7 @@ function showHomePage() {
     if (currentUser) {
         updateHomePageForLoggedInUser();
     }
+    console.log('=== SHOW HOMEPAGE DEBUG END ===');
 }
 
 function updateHomePageForLoggedInUser() {
@@ -77,35 +290,73 @@ function updateHomePageForLoggedInUser() {
     const heroSection = document.querySelector('.hero-section .container .row .col-lg-6:first-child');
     if (heroSection) {
         heroSection.innerHTML = `
-            <h1 class="display-4 fw-bold mb-4">Welcome back, ${currentUser.username}!</h1>
+            <h1 class="display-4 fw-bold mb-4">Welcome back, ${currentUser.email}!</h1>
             <p class="lead mb-4">Ready to continue your musical journey? Access your dashboard to manage your ${currentUser.role.toLowerCase()} activities.</p>
             <div class="d-flex gap-3">
-                <button class="btn btn-light btn-lg" onclick="showDashboard()">Go to Dashboard</button>
-                <button class="btn btn-outline-light btn-lg" onclick="logout()">Logout</button>
+                <button class="btn btn-light btn-lg" onclick="showDashboard(); return false;">Go to Dashboard</button>
+                <button class="btn btn-outline-light btn-lg" onclick="logout(); return false;">Logout</button>
             </div>
         `;
     }
 }
 
 function resetHomePageForLoggedOutUser() {
-    // Reset the hero section to the original logged-out state
+    // Reset the hero section to match the current homepage design
     const heroSection = document.querySelector('.hero-section .container .row .col-lg-6:first-child');
     if (heroSection) {
         heroSection.innerHTML = `
             <h1 class="display-4 fw-bold mb-4">Connect with Music</h1>
             <p class="lead mb-4">Freelance Music connects talented music teachers with eager students. Book lessons, learn instruments, and share your passion for music.</p>
             <div class="d-flex gap-3">
-                <button class="btn btn-light btn-lg" onclick="showRegisterPage()">Get Started</button>
-                <button class="btn btn-outline-light btn-lg" onclick="showLoginPage()">Login</button>
+                <button class="btn btn-light btn-lg" onclick="showStudentLoginPage()">Student Login</button>
+                <button class="btn btn-outline-light btn-lg" onclick="showTeacherLoginPage()">Teacher Login</button>
                 <button class="btn btn-outline-warning btn-lg" onclick="showAdminLoginPage()">Admin Login</button>
             </div>
         `;
     }
 }
 
-function showLoginPage() {
+function toggleStudentFields() {
+    const role = document.getElementById('registerRole').value;
+    const studentFields = document.getElementById('studentFields');
+    const teacherFields = document.getElementById('teacherFields');
+    
+    if (role === 'Student') {
+        studentFields.style.display = 'block';
+        teacherFields.style.display = 'none';
+    } else if (role === 'Teacher') {
+        studentFields.style.display = 'none';
+        teacherFields.style.display = 'block';
+    } else {
+        studentFields.style.display = 'none';
+        teacherFields.style.display = 'none';
+    }
+}
+
+function showStudentLoginPage() {
     hideAllPages();
-    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('studentLoginPage').classList.remove('hidden');
+}
+
+function showTeacherLoginPage() {
+    hideAllPages();
+    document.getElementById('teacherLoginPage').classList.remove('hidden');
+}
+
+function showStudentRegisterPage() {
+    hideAllPages();
+    document.getElementById('registerPage').classList.remove('hidden');
+    // Pre-select Student role
+    document.getElementById('registerRole').value = 'Student';
+    toggleStudentFields();
+}
+
+function showTeacherRegisterPage() {
+    hideAllPages();
+    document.getElementById('registerPage').classList.remove('hidden');
+    // Pre-select Teacher role
+    document.getElementById('registerRole').value = 'Teacher';
+    toggleStudentFields();
 }
 
 function showRegisterPage(role = '') {
@@ -122,10 +373,34 @@ function showAdminDashboard() {
     loadAdminReports();
 }
 
-function showTeacherDashboard() {
-    hideAllPages();
-    document.getElementById('teacherDashboard').classList.remove('hidden');
-    loadTeacherData();
+function showTeacherDashboard(event) {
+    if (event) {
+        event.preventDefault();
+    }
+    showTeacherDashboardCallCount++;
+    console.log('=== TEACHER DASHBOARD DEBUG ===');
+    console.log('showTeacherDashboard called - COUNT:', showTeacherDashboardCallCount);
+    console.log('Current user:', currentUser);
+    console.log('Auth token exists:', !!authToken);
+    console.log('Event:', event);
+    
+    try {
+        console.log('Hiding all pages...');
+        hideAllPages();
+        console.log('Showing teacher dashboard...');
+        document.getElementById('teacherDashboard').classList.remove('hidden');
+        
+        // Reset the teacher data loading flags to allow fresh data loading
+        resetTeacherDataFlags();
+        
+        console.log('Teacher dashboard shown, about to load data');
+        loadTeacherData();
+        console.log('loadTeacherData called, showTeacherDashboard function ending');
+        console.log('=== TEACHER DASHBOARD DEBUG END ===');
+    } catch (error) {
+        console.error('Error in showTeacherDashboard:', error);
+        console.error('Error stack:', error.stack);
+    }
 }
 
 function showStudentDashboard() {
@@ -141,28 +416,54 @@ function showBrowsePage() {
 }
 
 function showDashboard() {
-    if (!currentUser) {
-        showHomePage();
+    console.log('showDashboard called with currentUser:', currentUser);
+    console.log('isShowingDashboard:', isShowingDashboard);
+    
+    // Prevent multiple simultaneous dashboard calls
+    if (isShowingDashboard) {
+        console.log('Dashboard already being shown, skipping...');
         return;
     }
     
-    switch (currentUser.role) {
-        case 'Admin':
-            showAdminDashboard();
-            break;
-        case 'Teacher':
-            showTeacherDashboard();
-            break;
-        case 'Student':
-            showStudentDashboard();
-            break;
-        default:
+    isShowingDashboard = true;
+    
+    try {
+        if (!currentUser) {
+            console.log('No current user, showing homepage');
             showHomePage();
+            return;
+        }
+        
+        console.log('User role:', currentUser.role);
+        
+        switch (currentUser.role) {
+            case 'Admin':
+                console.log('Showing admin dashboard');
+                showAdminDashboard();
+                break;
+            case 'Teacher':
+                console.log('Showing teacher dashboard');
+                showTeacherDashboard();
+                break;
+            case 'Student':
+                console.log('Showing student dashboard');
+                showStudentDashboard();
+                break;
+            default:
+                console.log('Unknown role, showing homepage');
+                showHomePage();
+        }
+    } finally {
+        // Reset the flag after a short delay to allow the dashboard to load
+        setTimeout(() => {
+            isShowingDashboard = false;
+            console.log('Dashboard showing flag reset');
+        }, 2000); // 2 second delay
     }
 }
 
 function hideAllPages() {
-    const pages = ['homePage', 'loginPage', 'registerPage', 'adminDashboard', 'teacherDashboard', 'studentDashboard', 'browsePage'];
+    const pages = ['homePage', 'studentLoginPage', 'teacherLoginPage', 'registerPage', 'adminDashboard', 'teacherDashboard', 'studentDashboard', 'browsePage', 'adminLoginPage'];
     pages.forEach(page => {
         document.getElementById(page).classList.add('hidden');
     });
@@ -197,11 +498,22 @@ function updateNavigation() {
 }
 
 // Authentication Functions
-async function handleLogin(event) {
+async function handleLogin(event, role) {
     event.preventDefault();
     
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
+    let email, password;
+    
+    if (role === 'Student') {
+        email = document.getElementById('studentEmail').value;
+        password = document.getElementById('studentPassword').value;
+    } else if (role === 'Teacher') {
+        email = document.getElementById('teacherEmail').value;
+        password = document.getElementById('teacherPassword').value;
+    } else {
+        // Admin login
+        email = document.getElementById('adminEmail').value;
+        password = document.getElementById('adminPassword').value;
+    }
     
     try {
         console.log('Attempting login to:', `${API_BASE_URL}/auth/login`);
@@ -210,7 +522,7 @@ async function handleLogin(event) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ email, password })
         });
         
         console.log('Response status:', response.status);
@@ -221,31 +533,134 @@ async function handleLogin(event) {
             authToken = data.token;
             currentUser = {
                 id: data.userId,
-                username: username,
+                email: email,
                 role: data.role
             };
             
             localStorage.setItem('authToken', authToken);
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             
+            // CRITICAL: Update navigation FIRST
             updateNavigation();
-            showDashboard();
+            
+            // CRITICAL: Redirect based on role - NO HOMEPAGE CALLS
+            if (data.role === 'Admin') {
+                showAdminDashboard();
+            } else if (data.role === 'Teacher') {
+                showTeacherDashboard();
+            } else if (data.role === 'Student') {
+                showStudentDashboard();
+            } else {
+                // Fallback - still go to dashboard, not homepage
+                showDashboard();
+            }
         } else {
-            alert('Login failed: ' + (data.message || 'Unknown error'));
+            alert(`Login failed: ${data.message}`);
         }
     } catch (error) {
         console.error('Login error:', error);
-        alert('Login failed. Please check if the API server is running on http://localhost:5000');
+        alert('Login failed. Please try again.');
     }
 }
 
 async function handleRegister(event) {
     event.preventDefault();
     
-    const username = document.getElementById('registerUsername').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    const role = document.getElementById('registerRole').value;
+    console.log('handleRegister called');
+    console.log('Current page:', document.getElementById('registerPage') ? 'registerPage visible' : 'registerPage not visible');
+    
+    const emailElement = document.getElementById('registerEmail');
+    const passwordElement = document.getElementById('registerPassword');
+    const roleElement = document.getElementById('registerRole');
+    const nameElement = document.getElementById('registerName');
+    
+    console.log('Form elements found:', {
+        emailElement: !!emailElement,
+        passwordElement: !!passwordElement,
+        roleElement: !!roleElement,
+        nameElement: !!nameElement
+    });
+    
+    // Log the actual elements for debugging
+    console.log('Element details:', {
+        emailElement: emailElement,
+        passwordElement: passwordElement,
+        roleElement: roleElement,
+        nameElement: nameElement
+    });
+    
+    if (!emailElement || !passwordElement || !roleElement || !nameElement) {
+        console.error('Basic form elements not found');
+        console.error('Missing elements:', {
+            email: !emailElement,
+            password: !passwordElement,
+            role: !roleElement,
+            name: !nameElement
+        });
+        
+        // Check if we're on the register page
+        const registerPage = document.getElementById('registerPage');
+        if (!registerPage || registerPage.classList.contains('hidden')) {
+            console.error('Register page is not visible or does not exist');
+            alert('Error: Registration form is not available. Please navigate to the registration page.');
+            return;
+        }
+        
+        alert('Error: Form fields not found. Please refresh the page.');
+        return;
+    }
+    
+    const email = emailElement.value;
+    const password = passwordElement.value;
+    const role = roleElement.value;
+    const name = nameElement.value;
+    
+    console.log('Registration data:', { email, password, role, name });
+    
+    // Collect role-specific data
+    let requestData = { email, password, role, name };
+    
+    if (role === 'Student') {
+        // Get selected student instrument (radio button)
+        const selectedStudentInstrument = document.querySelector('input[name="studentInstrument"]:checked');
+        const instrument = selectedStudentInstrument ? selectedStudentInstrument.value : '';
+        
+        const levelElement = document.getElementById('registerStudentLevel');
+        if (!levelElement) {
+            console.error('registerStudentLevel element not found');
+            alert('Error: Level field not found. Please refresh the page.');
+            return;
+        }
+        
+        const level = levelElement.value;
+        console.log('Student data:', { instrument, level });
+        requestData = { ...requestData, instrument, level };
+    } else if (role === 'Teacher') {
+        const hourlyRateElement = document.getElementById('registerTeacherRate');
+        const descriptionElement = document.getElementById('registerTeacherDescription');
+        
+        if (!hourlyRateElement) {
+            console.error('registerTeacherRate element not found');
+            alert('Error: Hourly rate field not found. Please refresh the page.');
+            return;
+        }
+        if (!descriptionElement) {
+            console.error('registerTeacherDescription element not found');
+            alert('Error: Description field not found. Please refresh the page.');
+            return;
+        }
+        
+        const hourlyRate = hourlyRateElement.value;
+        const description = descriptionElement.value;
+        // Get selected teacher instruments (checkboxes)
+        const selectedTeacherInstruments = Array.from(document.querySelectorAll('input[name="teacherInstruments"]:checked'))
+            .map(checkbox => checkbox.value);
+        const instruments = selectedTeacherInstruments.join(', ');
+        console.log('Teacher data:', { hourlyRate, description, instruments });
+        requestData = { ...requestData, hourlyRate, description, instruments };
+    }
+    
+    console.log('Final request data:', requestData);
     
     try {
         const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -253,14 +668,18 @@ async function handleRegister(event) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, email, password, role })
+            body: JSON.stringify(requestData)
         });
         
         const data = await response.json();
         
         if (response.ok) {
             alert('Registration successful! Please login.');
-            showLoginPage();
+            if (role === 'Student') {
+                showStudentLoginPage();
+            } else if (role === 'Teacher') {
+                showTeacherLoginPage();
+            }
         } else {
             alert('Registration failed: ' + data.message);
         }
@@ -282,6 +701,12 @@ function logout() {
 
 // API Helper Functions
 async function apiCall(endpoint, method = 'GET', body = null) {
+    apiCallCount++;
+    console.log(`=== API CALL DEBUG #${apiCallCount} ===`);
+    console.log('Endpoint:', endpoint);
+    console.log('Method:', method);
+    console.log('Body:', body);
+    
     const headers = {
         'Content-Type': 'application/json'
     };
@@ -304,13 +729,20 @@ async function apiCall(endpoint, method = 'GET', body = null) {
         config.body = JSON.stringify(body);
     }
     
+    console.log('Making API call to:', `${API_BASE_URL}${endpoint}`);
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    console.log('API response status:', response.status);
     
     if (!response.ok) {
+        console.error('API call failed with status:', response.status);
         throw new Error(`API call failed: ${response.status}`);
     }
     
-    return response.json();
+    const data = await response.json();
+    console.log('API response data:', data);
+    console.log(`=== API CALL DEBUG #${apiCallCount} END ===`);
+    
+    return data;
 }
 
 // Admin Functions
@@ -769,12 +1201,89 @@ function populateBookingsCalendar(bookings) {
 }
 
 // Teacher Functions
+let isLoadingTeacherData = false;
+let lastLoadTeacherDataCall = 0;
+let teacherDataLoaded = false;
+let teacherDataLoadPromise = null; // Track the current loading promise
+
+// Function to reset teacher data loading flags
+function resetTeacherDataFlags() {
+    console.log('Resetting teacher data flags...');
+    teacherDataLoaded = false;
+    isLoadingTeacherData = false;
+    lastLoadTeacherDataCall = 0;
+    teacherDataLoadPromise = null;
+}
+
 async function loadTeacherData() {
+    loadTeacherDataCallCount++;
+    console.log('=== LOAD TEACHER DATA DEBUG ===');
+    console.log('loadTeacherData function called - COUNT:', loadTeacherDataCallCount);
+    console.log('teacherDataLoaded:', teacherDataLoaded);
+    console.log('isLoadingTeacherData:', isLoadingTeacherData);
+    console.log('teacherDataLoadPromise exists:', !!teacherDataLoadPromise);
+    
+    // If we're already loading, return the existing promise
+    if (teacherDataLoadPromise) {
+        console.log('Teacher data already loading, returning existing promise');
+        return teacherDataLoadPromise;
+    }
+    
+    // If data is already loaded and we're not explicitly resetting, skip
+    if (teacherDataLoaded && !isLoadingTeacherData) {
+        console.log('Teacher data already loaded and not loading, skipping...');
+        return Promise.resolve();
+    }
+    
+    // Prevent rapid successive calls
+    const now = Date.now();
+    if (now - lastLoadTeacherDataCall < 1000) { // 1 second minimum between calls
+        console.log('loadTeacherData called too soon, skipping...');
+        return Promise.resolve();
+    }
+    lastLoadTeacherDataCall = now;
+    
+    console.log('Starting new teacher data load...');
+    isLoadingTeacherData = true;
+    
+    // Create the loading promise with proper error handling
+    teacherDataLoadPromise = loadTeacherDataInternal().catch(error => {
+        console.error('Teacher data loading failed:', error);
+        // Don't re-throw the error to prevent unhandled promise rejection
+        return null;
+    });
+    
     try {
+        await teacherDataLoadPromise;
+    } catch (error) {
+        console.error('Error in loadTeacherData:', error);
+        // Don't re-throw to prevent unhandled promise rejection
+    } finally {
+        // Always clean up
+        teacherDataLoadPromise = null;
+        isLoadingTeacherData = false;
+        teacherDataLoaded = true;
+        console.log('=== LOAD TEACHER DATA DEBUG END ===');
+    }
+    
+    return teacherDataLoadPromise;
+}
+
+async function loadTeacherDataInternal() {
+    try {
+        console.log('Starting internal teacher data loading...');
+        
         // Load teacher profile from API
+        console.log('Loading teacher profile...');
         const profile = await apiCall('/teachers/my-profile');
+        console.log('Profile loaded from API:', profile);
+        
         if (profile) {
+            console.log('Calling populateTeacherProfile with:', profile);
             populateTeacherProfile(profile);
+            console.log('populateTeacherProfile completed');
+        } else {
+            console.log('No profile data received from API');
         }
         
         // Load instruments for teacher profile
@@ -784,93 +1293,156 @@ async function loadTeacherData() {
         populateInstrumentsCheckboxes(instruments);
         
         // Load availability from API
-        const availability = await apiCall('/teachers/availability');
-        window.allAvailability = availability;
-        populateAvailabilityList(availability);
+        try {
+            const availability = await apiCall('/teachers/availability');
+            window.allAvailability = availability || [];
+            populateAvailabilityList(availability || []);
+        } catch (availabilityError) {
+            console.log('No availability found or error loading availability:', availabilityError);
+            window.allAvailability = [];
+            populateAvailabilityList([]);
+        }
         
         // Load lessons from API
-        const lessons = await apiCall('/teachers/my-lessons');
-        window.allLessons = lessons;
-        populateTeacherLessons(lessons);
+        try {
+            const lessons = await apiCall('/teachers/my-lessons');
+            window.allLessons = lessons || [];
+            populateTeacherLessons(lessons || []);
+        } catch (lessonError) {
+            console.log('No lessons found or error loading lessons:', lessonError);
+            window.allLessons = [];
+            populateTeacherLessons([]);
+        }
+        
+        console.log('Teacher data loading completed successfully');
+        
+        // Add a delay to see if something happens after this
+        setTimeout(() => {
+            console.log('=== 2 SECONDS AFTER TEACHER DATA LOADED ===');
+            console.log('Checking if anything triggered a reload...');
+        }, 2000);
         
     } catch (error) {
         console.error('Error loading teacher data:', error);
-        alert('Failed to load teacher data. Please try again.');
+        console.error('Error details:', error.message);
+        console.error('Error stack:', error.stack);
+        // Don't show alert to prevent page reload issues
+        console.log('Teacher data loading failed, but continuing...');
+        // Don't re-throw the error - let the caller handle it
     }
 }
 
 function populateTeacherProfile(profile) {
-    document.getElementById('teacherName').value = profile.Name || '';
-    document.getElementById('teacherBio').value = profile.Bio || '';
-    document.getElementById('defaultLessonCost').value = profile.DefaultLessonCost || '';
-    document.getElementById('teacherContact').value = profile.ContactInfo || '';
-    
-    // Handle photo preview if saved
-    if (profile.PhotoUrl) {
-        const preview = document.getElementById('photoPreview');
-        const previewImage = document.getElementById('previewImage');
-        previewImage.src = profile.PhotoUrl;
-        preview.style.display = 'block';
-    }
-    
-    // Handle instruments - check the boxes for saved instruments
-    if (profile.Instruments && profile.Instruments.length > 0) {
-        profile.Instruments.forEach(instrument => {
-            const checkbox = document.getElementById(`instrument${instrument.Id}`);
-            if (checkbox) {
-                checkbox.checked = true;
-            }
+    try {
+        console.log('populateTeacherProfile called with:', profile);
+        
+        // Handle both capitalized and lowercase property names
+        const name = profile.Name || profile.name || '';
+        const email = profile.Email || profile.email || '';
+        const hourlyRate = profile.HourlyRate || profile.hourlyRate || '';
+        const description = profile.Description || profile.description || '';
+        
+        console.log('About to populate form fields...');
+        
+        // Temporarily disable ALL event listeners to prevent any cascading effects
+        const defaultCostElement = document.getElementById('defaultLessonCost');
+        const availabilityCostElement = document.getElementById('availabilityCost');
+        const teacherNameElement = document.getElementById('teacherName');
+        const teacherEmailElement = document.getElementById('teacherProfileEmail');
+        const teacherBioElement = document.getElementById('teacherBio');
+        
+        // Remove ALL event listeners temporarily
+        if (availabilityCostElement) {
+            availabilityCostElement.removeEventListener('input', loadDefaultAvailabilityCost);
+        }
+        
+        // Also check for any form submission listeners
+        const teacherProfileForm = document.getElementById('teacherProfileForm');
+        if (teacherProfileForm) {
+            console.log('Temporarily disabling teacher profile form...');
+            teacherProfileForm.style.pointerEvents = 'none';
+        }
+        
+        console.log('Setting form field values...');
+        teacherNameElement.value = name;
+        teacherEmailElement.value = email;
+        defaultCostElement.value = hourlyRate;
+        teacherBioElement.value = description;
+        
+        console.log('Form fields populated:', {
+            name: name,
+            email: email,
+            hourlyRate: hourlyRate,
+            description: description
         });
+        
+        // Re-enable everything after a delay
+        setTimeout(() => {
+            console.log('Re-enabling form and event listeners...');
+            if (teacherProfileForm) {
+                teacherProfileForm.style.pointerEvents = 'auto';
+            }
+            if (availabilityCostElement) {
+                availabilityCostElement.addEventListener('input', loadDefaultAvailabilityCost);
+            }
+        }, 500); // Longer delay to ensure everything is set
+        
+        // Handle instruments - the instruments will be populated by populateInstrumentsCheckboxes
+        // and then we'll check the ones that match the saved instruments
+        const instruments = profile.Instruments || profile.instruments;
+        if (instruments) {
+            console.log('Saved instruments:', instruments);
+            // Store the saved instruments for later use when checkboxes are created
+            window.savedTeacherInstruments = instruments.split(', ').filter(i => i.trim() !== '');
+            console.log('Saved instruments array:', window.savedTeacherInstruments);
+        }
+        
+        console.log('populateTeacherProfile completed successfully');
+    } catch (error) {
+        console.error('Error in populateTeacherProfile:', error);
+        console.error('Error stack:', error.stack);
     }
-    
-    // Load default cost into schedule lesson form
-    loadDefaultLessonCost();
 }
 
 async function handleTeacherProfile(event) {
     event.preventDefault();
     
     const name = document.getElementById('teacherName').value;
-    const bio = document.getElementById('teacherBio').value;
-    const defaultLessonCost = parseFloat(document.getElementById('defaultLessonCost').value);
-    const contact = document.getElementById('teacherContact').value;
-    const photoFile = document.getElementById('teacherPhoto').files[0];
+    const email = document.getElementById('teacherProfileEmail').value;
+    const hourlyRate = parseFloat(document.getElementById('defaultLessonCost').value) || 0;
+    const description = document.getElementById('teacherBio').value;
     
     // Get selected instruments
-    const selectedInstruments = Array.from(document.querySelectorAll('#instrumentsCheckboxes input:checked'))
-        .map(input => parseInt(input.value));
+    const selectedInstruments = Array.from(document.querySelectorAll('input[name="profileTeacherInstruments"]:checked'))
+        .map(checkbox => checkbox.value);
+    const instruments = selectedInstruments.join(', ');
     
     try {
-        // Create FormData for file upload
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('bio', bio);
-        formData.append('defaultLessonCost', defaultLessonCost);
-        formData.append('contactInfo', contact);
-        formData.append('instrumentIds', JSON.stringify(selectedInstruments));
-        
-        if (photoFile) {
-            formData.append('photo', photoFile);
-        }
-        
         const response = await fetch(`${API_BASE_URL}/teachers/profile`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${authToken}`
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
             },
-            body: formData
+            body: JSON.stringify({
+                name,
+                email,
+                hourlyRate,
+                description,
+                instruments
+            })
         });
         
-        if (!response.ok) {
-            throw new Error('Failed to save profile');
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Profile updated successfully!');
+        } else {
+            alert('Failed to update profile: ' + data.message);
         }
-        
-        // Profile saved to database via API
-        
-        alert('Profile saved successfully!');
     } catch (error) {
-        console.error('Error saving teacher profile:', error);
-        alert('Failed to save profile. Please try again.');
+        console.error('Error updating profile:', error);
+        alert('Failed to update profile. Please try again.');
     }
 }
 
@@ -1152,8 +1724,13 @@ function populateInstrumentsCheckboxes(instruments) {
         console.log('Creating checkbox for instrument:', instrument);
         const div = document.createElement('div');
         div.className = 'form-check';
+        
+        // Check if this instrument should be checked based on saved teacher instruments
+        const isChecked = window.savedTeacherInstruments && 
+                        window.savedTeacherInstruments.includes(instrument.Name || instrument.name);
+        
         div.innerHTML = `
-            <input class="form-check-input" type="checkbox" value="${instrument.Id || instrument.id}" id="instrument${instrument.Id || instrument.id}">
+            <input class="form-check-input" type="checkbox" name="profileTeacherInstruments" value="${instrument.Name || instrument.name}" id="instrument${instrument.Id || instrument.id}" ${isChecked ? 'checked' : ''}>
             <label class="form-check-label" for="instrument${instrument.Id || instrument.id}">
                 ${instrument.Name || instrument.name}
             </label>
@@ -1162,6 +1739,7 @@ function populateInstrumentsCheckboxes(instruments) {
     });
     
     console.log('Instruments checkboxes populated');
+    console.log('Saved teacher instruments:', window.savedTeacherInstruments);
 }
 
 async function handleAddAvailability(event) {
@@ -1526,22 +2104,45 @@ async function loadStudentData() {
 
 function populateStudentProfile(profile) {
     document.getElementById('studentName').value = profile.name || '';
+    document.getElementById('studentProfileEmail').value = profile.email || '';
     document.getElementById('studentContact').value = profile.contactInfo || '';
     document.getElementById('studentPayment').value = profile.paymentInfo || '';
+    
+    // Handle instrument - select the saved instrument
+    if (profile.instrument) {
+        const instrumentRadio = document.querySelector(`input[name="studentProfileInstrument"][value="${profile.instrument}"]`);
+        if (instrumentRadio) {
+            instrumentRadio.checked = true;
+        }
+    }
+    
+    // Handle level
+    if (profile.level) {
+        document.getElementById('studentLevel').value = profile.level;
+    }
 }
 
 async function handleStudentProfile(event) {
     event.preventDefault();
     
     const name = document.getElementById('studentName').value;
+    const email = document.getElementById('studentProfileEmail').value;
     const contact = document.getElementById('studentContact').value;
     const payment = document.getElementById('studentPayment').value;
+    
+    // Get selected instrument (radio button)
+    const selectedInstrument = document.querySelector('input[name="studentProfileInstrument"]:checked');
+    const instrument = selectedInstrument ? selectedInstrument.value : '';
+    const level = document.getElementById('studentLevel').value;
     
     try {
         await apiCall('/students/profile', 'POST', {
             name,
+            email,
             contactInfo: contact,
-            paymentInfo: payment
+            paymentInfo: payment,
+            instrument,
+            level
         });
         
         alert('Profile saved successfully!');
