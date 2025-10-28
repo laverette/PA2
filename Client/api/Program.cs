@@ -79,6 +79,40 @@ if (adminExists == 0)
     Console.WriteLine("Admin user created: admin@freelancemusic.com/admin123");
 }
 
+// Create test teacher if none exist
+var teacherExists = connection.QuerySingleOrDefault<int>("SELECT COUNT(*) FROM Teachers");
+if (teacherExists == 0)
+{
+    try
+    {
+        // Create test teacher user
+        var teacherPasswordHash = BCrypt.Net.BCrypt.HashPassword("teacher123");
+        var teacherUserId = connection.QuerySingle<int>(
+            "INSERT INTO Users (Email, PasswordHash, Role) VALUES ('teacher@freelancemusic.com', @PasswordHash, 'Teacher'); SELECT last_insert_rowid();",
+            new { PasswordHash = teacherPasswordHash }
+        );
+        
+        // Create teacher profile
+        connection.Execute(@"
+            INSERT INTO Teachers (UserId, Name, Email, HourlyRate, Description, Instruments) 
+            VALUES (@UserId, @Name, @Email, @HourlyRate, @Description, @Instruments)",
+            new { 
+                UserId = teacherUserId, 
+                Name = "Sarah Johnson", 
+                Email = "teacher@freelancemusic.com",
+                HourlyRate = 50.00m,
+                Description = "Experienced piano and guitar teacher with 10+ years of teaching experience. Specializes in classical and contemporary music.",
+                Instruments = "Piano, Guitar"
+            });
+        
+        Console.WriteLine("Test teacher created: teacher@freelancemusic.com/teacher123");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error creating test teacher: {ex.Message}");
+    }
+}
+
 // COMPREHENSIVE DATABASE SCHEMA - Supports ALL Functionalities
 
 // Teachers table - Teacher profiles and data (Name, Email required)
@@ -337,15 +371,31 @@ app.MapPost("/api/auth/register", async (RegisterRequest request) =>
         }
         else if (request.Role == "Student")
         {
+            // Ensure Students table exists with proper schema
             await conn.ExecuteAsync(@"
-                INSERT INTO Students (UserId, Name, Email, Instrument, Level) 
-                VALUES (@UserId, @Name, @Email, @Instrument, @Level)",
+                CREATE TABLE IF NOT EXISTS Students (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    UserId INTEGER NOT NULL,
+                    Name TEXT NOT NULL,
+                    Email TEXT NOT NULL,
+                    ContactInfo TEXT,
+                    PaymentInfo TEXT,
+                    Instruments TEXT,
+                    Level TEXT,
+                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                );
+            ");
+            
+            await conn.ExecuteAsync(@"
+                INSERT INTO Students (UserId, Name, Email, Instruments, Level) 
+                VALUES (@UserId, @Name, @Email, @Instruments, @Level)",
                 new { 
                     UserId = userId, 
                     Name = request.Name, 
                     Email = request.Email,
-                    Instrument = request.Instrument,
-                    Level = request.Level
+                    Instruments = request.Instruments ?? request.Instrument ?? "",
+                    Level = request.Level ?? ""
                 });
         }
         
@@ -454,7 +504,7 @@ app.MapPost("/api/teachers/profile", async (HttpContext context) =>
                 VALUES (@UserId, @Name, @Email, @HourlyRate, @Description, @Instruments)",
                 new { UserId = userId, Name = name, Email = email, HourlyRate = hourlyRate, Description = description, Instruments = instruments });
             
-            teacherId = conn.QuerySingle<int>("SELECT Id FROM Teachers WHERE UserId = @UserId", new { UserId = userId });
+            teacherId = (int)conn.QuerySingle<long>("SELECT Id FROM Teachers WHERE UserId = @UserId", new { UserId = userId });
         }
         else
         {
@@ -464,7 +514,7 @@ app.MapPost("/api/teachers/profile", async (HttpContext context) =>
                 WHERE UserId = @UserId",
                 new { UserId = userId, Name = name, Email = email, HourlyRate = hourlyRate, Description = description, Instruments = instruments });
             
-            teacherId = existingProfile.Id;
+            teacherId = (int)existingProfile.Id;
         }
 
         return Results.Ok(new { message = "Profile updated successfully" });
@@ -665,25 +715,25 @@ app.MapPost("/api/teachers/schedule-lesson", async (HttpContext context) =>
         
         Console.WriteLine($"DEBUG: Start minutes: {startMinutes}, End minutes: {endMinutes}");
         Console.WriteLine($"DEBUG: Calculated end time: {endTime}");
-        Console.WriteLine($"DEBUG: About to insert lesson with TeacherId: {teacherProfile.Id}");
+        Console.WriteLine($"DEBUG: About to insert lesson with TeacherId: {(int)teacherProfile.Id}");
         
         try
         {
-            var lessonId = conn.ExecuteScalar<int>(@"
+            var lessonId = (int)conn.ExecuteScalar<long>(@"
                 INSERT INTO Lessons (TeacherId, StudentName, Instrument, LessonDate, StartTime, EndTime, 
-                                    LessonType, Cost, Status, Notes)
+                                    LessonType, TotalCost, Status, Notes)
                 VALUES (@TeacherId, @StudentName, @Instrument, @LessonDate, @StartTime, @EndTime, 
-                        @LessonType, @Cost, @Status, @Notes);
+                        @LessonType, @TotalCost, @Status, @Notes);
                 SELECT last_insert_rowid();",
                 new { 
-                    TeacherId = teacherProfile.Id, 
+                    TeacherId = (int)teacherProfile.Id, 
                     StudentName = request.StudentName ?? "",
                     Instrument = request.Instrument ?? "",
                     LessonDate = request.LessonDate ?? "",
                     StartTime = startTime, // Store in 12-hour format like "3:00 PM"
                     EndTime = endTime,     // Store in 12-hour format like "3:30 PM"
                     LessonType = request.LessonType ?? "",
-                    Cost = request.Cost,
+                    TotalCost = request.Cost,
                     Status = "Pending",
                     Notes = request.Notes ?? ""
                 });
@@ -893,169 +943,16 @@ app.MapGet("/api/teachers/all", (HttpContext context) =>
     {
         using var conn = new SqliteConnection(connectionString);
         
-        // First, ensure the database schema exists
-        conn.Execute(@"
-            CREATE TABLE IF NOT EXISTS Users (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Username TEXT NOT NULL UNIQUE,
-                PasswordHash TEXT NOT NULL,
-                Role TEXT NOT NULL CHECK (Role IN ('Admin', 'Teacher', 'Student')),
-                CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                IsActive BOOLEAN DEFAULT 1
-            );
-        ");
-        
-        conn.Execute(@"
-            CREATE TABLE IF NOT EXISTS Teachers (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                UserId INTEGER NOT NULL,
-                Name TEXT NOT NULL,
-                Bio TEXT,
-                HourlyRate DECIMAL(10,2) NOT NULL,
-                ContactInfo TEXT,
-                PhotoUrl TEXT,
-                CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
-            );
-        ");
-        
-        conn.Execute(@"
-            CREATE TABLE IF NOT EXISTS Instruments (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Name TEXT NOT NULL UNIQUE,
-                Category TEXT,
-                CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
-        ");
-        
-        conn.Execute(@"
-            CREATE TABLE IF NOT EXISTS TeacherInstruments (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                TeacherId INTEGER NOT NULL,
-                InstrumentId INTEGER NOT NULL,
-                ProficiencyLevel TEXT DEFAULT 'Intermediate',
-                YearsExperience INTEGER DEFAULT 0,
-                FOREIGN KEY (TeacherId) REFERENCES Teachers(Id) ON DELETE CASCADE,
-                FOREIGN KEY (InstrumentId) REFERENCES Instruments(Id) ON DELETE CASCADE,
-                UNIQUE(TeacherId, InstrumentId)
-            );
-        ");
-        
-        // Insert default instruments if they don't exist
-        conn.Execute(@"
-            INSERT OR IGNORE INTO Instruments (Name, Category) VALUES 
-            ('Piano', 'Keyboard'),
-            ('Guitar', 'String'),
-            ('Violin', 'String'),
-            ('Drums', 'Percussion'),
-            ('Voice/Singing', 'Vocal');
-        ");
-        
-        // Create admin user if it doesn't exist
-        var adminExists = conn.QuerySingleOrDefault<int>("SELECT COUNT(*) FROM Users WHERE Username = 'admin'");
-        if (adminExists == 0)
-        {
-            var adminPasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123");
-            conn.Execute("INSERT INTO Users (Username, PasswordHash, Role) VALUES ('admin', @PasswordHash, 'Admin')", 
-                new { PasswordHash = adminPasswordHash });
-            Console.WriteLine("Admin user created: admin/admin123");
-        }
-        
-        // Create a test teacher if none exist
-        var teacherExists = conn.QuerySingleOrDefault<int>("SELECT COUNT(*) FROM Teachers");
-        Console.WriteLine($"Current teacher count: {teacherExists}");
-        if (teacherExists == 0)
-        {
-            try
-            {
-                // Check if user 's' already exists
-                var userExists = conn.QuerySingleOrDefault<int>("SELECT COUNT(*) FROM Users WHERE Username = 's'");
-                int userId;
-                
-                if (userExists == 0)
-                {
-                    // Create test teacher user
-                    var teacherPasswordHash = BCrypt.Net.BCrypt.HashPassword("s");
-                    conn.Execute("INSERT INTO Users (Username, PasswordHash, Role) VALUES ('s', @PasswordHash, 'Teacher')", 
-                        new { PasswordHash = teacherPasswordHash });
-                    
-                    userId = conn.QuerySingleOrDefault<int>("SELECT Id FROM Users WHERE Username = 's'");
-                    Console.WriteLine($"Created user with ID: {userId}");
-                }
-                else
-                {
-                    // User already exists, get their ID
-                    userId = conn.QuerySingleOrDefault<int>("SELECT Id FROM Users WHERE Username = 's'");
-                    Console.WriteLine($"User 's' already exists with ID: {userId}");
-                }
-                
-                // Check if teacher profile already exists for this user
-                var existingTeacher = conn.QuerySingleOrDefault<int>("SELECT COUNT(*) FROM Teachers WHERE UserId = @UserId", new { UserId = userId });
-                
-                if (existingTeacher == 0)
-                {
-                    // Create teacher profile
-                    conn.Execute("INSERT INTO Teachers (UserId, Name, Bio, HourlyRate, ContactInfo) VALUES (@UserId, @Name, @Bio, @HourlyRate, @ContactInfo)", 
-                        new { 
-                            UserId = userId, 
-                            Name = "Test Teacher", 
-                            Bio = "Experienced music teacher", 
-                            HourlyRate = 50.00, 
-                            ContactInfo = "test@email.com" 
-                        });
-                    
-                    var teacherId = conn.QuerySingleOrDefault<int>("SELECT Id FROM Teachers WHERE UserId = @UserId", new { UserId = userId });
-                    Console.WriteLine($"Created teacher with ID: {teacherId}");
-                    
-                    // Add instruments to teacher
-                    conn.Execute("INSERT INTO TeacherInstruments (TeacherId, InstrumentId) VALUES (@TeacherId, 1)", new { TeacherId = teacherId });
-                    conn.Execute("INSERT INTO TeacherInstruments (TeacherId, InstrumentId) VALUES (@TeacherId, 2)", new { TeacherId = teacherId });
-                }
-                else
-                {
-                    Console.WriteLine($"Teacher profile already exists for user ID: {userId}");
-                }
-                
-                Console.WriteLine("Test teacher setup completed: s/s");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error creating test teacher: {ex.Message}");
-            }
-        }
-        
-        // Debug: Check what's actually in the Teachers table
-        var allTeachers = conn.Query("SELECT * FROM Teachers").ToList();
-        Console.WriteLine($"Raw Teachers table has {allTeachers.Count} records");
-        if (allTeachers.Count > 0)
-        {
-            var firstTeacher = allTeachers[0];
-            Console.WriteLine($"First teacher - Id: {firstTeacher.Id}, Name: {firstTeacher.Name}, UserId: {firstTeacher.UserId}");
-        }
-        
-        // Debug: Check Users table
-        var teacherUsers = conn.Query("SELECT * FROM Users WHERE Role = 'Teacher'").ToList();
-        Console.WriteLine($"Users with Teacher role: {teacherUsers.Count}");
-        
-        // Debug: Check the specific user that the teacher references
-        var specificUser = conn.Query("SELECT * FROM Users WHERE Id = 9").FirstOrDefault();
-        if (specificUser != null)
-        {
-            Console.WriteLine($"User 9 exists - Username: {specificUser.Username}, Role: {specificUser.Role}");
-        }
-        else
-        {
-            Console.WriteLine("User 9 does not exist!");
-        }
-        
+        // Simple query to get all teachers with their user info
         var teachers = conn.Query(@"
             SELECT 
                 t.Id,
                 t.Name,
-                t.Bio,
+                t.Email,
                 t.HourlyRate as DefaultLessonCost,
-                t.ContactInfo,
-                u.Username
+                t.Description as Bio,
+                t.Instruments,
+                u.Email as UserEmail
             FROM Teachers t
             INNER JOIN Users u ON t.UserId = u.Id
             WHERE u.Role = 'Teacher'
@@ -1063,54 +960,36 @@ app.MapGet("/api/teachers/all", (HttpContext context) =>
         
         Console.WriteLine($"Found {teachers.Count} teachers in database");
         
-        // If no teachers found but we have teacher records, try to fix the data
-        if (teachers.Count == 0 && allTeachers.Count > 0)
+        // Get instruments for each teacher from the Teachers.Instruments field
+        var teachersWithInstruments = new List<object>();
+        
+        foreach (var teacher in teachers)
         {
-            Console.WriteLine("Attempting to fix teacher data...");
-            foreach (var teacher in allTeachers)
+            var instrumentsList = new List<object>();
+            
+            if (!string.IsNullOrEmpty(teacher.Instruments))
             {
-                // Check if the user exists and has the right role
-                var user = conn.Query("SELECT * FROM Users WHERE Id = @UserId", new { UserId = teacher.UserId }).FirstOrDefault();
-                if (user != null && user.Role != "Teacher")
+                var instrumentNames = teacher.Instruments.Split(',');
+                foreach (var instrumentName in instrumentNames)
                 {
-                    Console.WriteLine($"Updating user {user.Username} role from {user.Role} to Teacher");
-                    conn.Execute("UPDATE Users SET Role = 'Teacher' WHERE Id = @UserId", new { UserId = teacher.UserId });
+                    instrumentsList.Add(new { 
+                        Id = 0, // We don't have individual IDs for string-based instruments
+                        Name = instrumentName.Trim() 
+                    });
                 }
             }
             
-            // Try the query again
-            teachers = conn.Query(@"
-                SELECT 
-                    t.Id,
-                    t.Name,
-                    t.Bio,
-                    t.HourlyRate as DefaultLessonCost,
-                    t.ContactInfo,
-                    u.Username
-                FROM Teachers t
-                INNER JOIN Users u ON t.UserId = u.Id
-                WHERE u.Role = 'Teacher'
-            ").ToList();
-            
-            Console.WriteLine($"After fix: Found {teachers.Count} teachers in database");
+            teachersWithInstruments.Add(new
+            {
+                Id = teacher.Id,
+                Name = teacher.Name,
+                Email = teacher.Email,
+                Bio = teacher.Bio,
+                DefaultLessonCost = teacher.DefaultLessonCost,
+                ContactInfo = teacher.Email, // Use email as contact info
+                Instruments = instrumentsList
+            });
         }
-
-        // Get instruments for each teacher
-        var teachersWithInstruments = teachers.Select(teacher => new
-        {
-            Id = teacher.Id,
-            Name = teacher.Name,
-            Username = teacher.Username,
-            Bio = teacher.Bio,
-            DefaultLessonCost = teacher.DefaultLessonCost,
-            ContactInfo = teacher.ContactInfo,
-            Instruments = conn.Query(@"
-                SELECT i.Id, i.Name
-                FROM TeacherInstruments ti
-                INNER JOIN Instruments i ON ti.InstrumentId = i.Id
-                WHERE ti.TeacherId = @TeacherId
-            ", new { TeacherId = teacher.Id }).ToList()
-        }).ToList();
 
         return Results.Ok(teachersWithInstruments);
     }
@@ -1141,8 +1020,11 @@ app.MapPost("/api/students/profile", async (HttpContext context) =>
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 UserId INTEGER NOT NULL,
                 Name TEXT NOT NULL,
+                Email TEXT NOT NULL,
                 ContactInfo TEXT,
                 PaymentInfo TEXT,
+                Instruments TEXT,
+                Level TEXT,
                 CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
             );
@@ -1162,26 +1044,30 @@ app.MapPost("/api/students/profile", async (HttpContext context) =>
             // Update existing student profile
             conn.Execute(@"
                 UPDATE Students 
-                SET Name = @Name, ContactInfo = @ContactInfo, PaymentInfo = @PaymentInfo 
+                SET Name = @Name, Email = @Email, PaymentInfo = @PaymentInfo, Instruments = @Instruments, Level = @Level 
                 WHERE UserId = @UserId
             ", new { 
                 UserId = userId, 
                 Name = request.Name, 
-                ContactInfo = request.ContactInfo, 
-                PaymentInfo = request.PaymentInfo 
+                Email = request.Email,
+                PaymentInfo = request.PaymentInfo,
+                Instruments = request.Instruments,
+                Level = request.Level
             });
         }
         else
         {
             // Create new student profile
             conn.Execute(@"
-                INSERT INTO Students (UserId, Name, ContactInfo, PaymentInfo) 
-                VALUES (@UserId, @Name, @ContactInfo, @PaymentInfo)
+                INSERT INTO Students (UserId, Name, Email, PaymentInfo, Instruments, Level) 
+                VALUES (@UserId, @Name, @Email, @PaymentInfo, @Instruments, @Level)
             ", new { 
                 UserId = userId, 
                 Name = request.Name, 
-                ContactInfo = request.ContactInfo, 
-                PaymentInfo = request.PaymentInfo 
+                Email = request.Email,
+                PaymentInfo = request.PaymentInfo,
+                Instruments = request.Instruments,
+                Level = request.Level
             });
         }
         
@@ -1214,15 +1100,43 @@ app.MapGet("/api/students/my-profile", (HttpContext context) =>
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 UserId INTEGER NOT NULL,
                 Name TEXT NOT NULL,
+                Email TEXT NOT NULL,
                 ContactInfo TEXT,
                 PaymentInfo TEXT,
+                Instruments TEXT,
+                Level TEXT,
                 CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
             );
         ");
         
+        // First, try to add missing columns to existing Students table
+        try
+        {
+            conn.Execute("ALTER TABLE Students ADD COLUMN Email TEXT");
+        }
+        catch { /* Column might already exist */ }
+        
+        try
+        {
+            conn.Execute("ALTER TABLE Students ADD COLUMN Instruments TEXT");
+        }
+        catch { /* Column might already exist */ }
+        
+        try
+        {
+            conn.Execute("ALTER TABLE Students ADD COLUMN Level TEXT");
+        }
+        catch { /* Column might already exist */ }
+        
+        try
+        {
+            conn.Execute("ALTER TABLE Students ADD COLUMN PaymentInfo TEXT");
+        }
+        catch { /* Column might already exist */ }
+        
         var student = conn.QuerySingleOrDefault(@"
-            SELECT s.Name, s.ContactInfo, s.PaymentInfo, u.Username
+            SELECT s.Name, s.Email, s.PaymentInfo, s.Instruments, s.Level, u.Email as UserEmail
             FROM Students s
             INNER JOIN Users u ON s.UserId = u.Id
             WHERE s.UserId = @UserId
@@ -1230,10 +1144,24 @@ app.MapGet("/api/students/my-profile", (HttpContext context) =>
         
         if (student == null)
         {
-            return Results.NotFound(new { message = "Student profile not found" });
+            return Results.Ok(new
+            {
+                name = "",
+                email = "",
+                paymentInfo = "",
+                instruments = "",
+                level = ""
+            });
         }
         
-        return Results.Ok(student);
+        return Results.Ok(new
+        {
+            name = student.Name ?? "",
+            email = student.Email ?? "",
+            paymentInfo = student.PaymentInfo ?? "",
+            instruments = student.Instruments ?? "",
+            level = student.Level ?? ""
+        });
     }
     catch (Exception ex)
     {
@@ -1249,4 +1177,4 @@ public record LoginRequest(string Email, string Password);
 public record RegisterRequest(string Email, string Password, string Role, string Name, string? HourlyRate, string? Description, string? Instruments, string? Instrument, string? Level);
 public record AvailabilityRequest(string? Date, string? StartTime, string? EndTime, bool IsVirtual, decimal Cost, string? Notes);
 public record ScheduleLessonRequest(string? StudentName, string? Instrument, string? LessonDate, string? LessonTime, int Duration, string? LessonType, decimal Cost, string? Notes);
-public record StudentProfileRequest(string Name, string ContactInfo, string PaymentInfo);
+public record StudentProfileRequest(string Name, string Email, string PaymentInfo, string Instruments, string Level);

@@ -2,6 +2,7 @@
 // Global variables
 let currentUser = null;
 let authToken = null;
+let userDisplayName = null; // Store the user's actual name from profile
 
 // Configurable API Base URL - Configured for localhost development
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -86,6 +87,20 @@ document.addEventListener('submit', function(event) {
     console.log('Form action:', event.target.action);
     console.log('Form method:', event.target.method);
     console.log('=== END FORM SUBMISSION DEBUG ===');
+});
+
+// Add Bootstrap tab event listener for Browse Teachers tab
+document.addEventListener('shown.bs.tab', function(event) {
+    console.log('=== TAB ACTIVATED ===');
+    console.log('Tab target:', event.target);
+    console.log('Tab href:', event.target.getAttribute('href'));
+    
+    // If the Browse Teachers tab was activated, reload teachers
+    if (event.target.getAttribute('href') === '#browseTeachers') {
+        console.log('Browse Teachers tab activated, reloading teachers...');
+        loadTeachers();
+    }
+    console.log('=== END TAB ACTIVATED DEBUG ===');
 });
 
 // Track any clicks that might cause navigation
@@ -481,7 +496,9 @@ function updateNavigation() {
         loginNav.style.display = 'none';
         registerNav.style.display = 'none';
         userNav.style.display = 'block';
-        document.getElementById('userName').textContent = currentUser.username;
+        // Use the actual name from profile if available, otherwise fall back to email
+        const displayName = userDisplayName || currentUser.email.split('@')[0];
+        document.getElementById('userName').textContent = displayName;
         
         // Show role-specific navigation
         adminNav.style.display = currentUser.role === 'Admin' ? 'block' : 'none';
@@ -1376,6 +1393,12 @@ function populateTeacherProfile(profile) {
             description: description
         });
         
+        // Store the user's name for navigation display
+        if (name) {
+            userDisplayName = name;
+            updateNavigation(); // Update navigation with the actual name
+        }
+        
         // Re-enable everything after a delay
         setTimeout(() => {
             console.log('Re-enabling form and event listeners...');
@@ -2088,6 +2111,19 @@ function updateLessonStatusInUI(lessonId, newStatus) {
 // Student Functions
 async function loadStudentData() {
     try {
+        // Load student profile from API
+        console.log('Loading student profile...');
+        const profile = await apiCall('/students/my-profile');
+        console.log('Student profile loaded from API:', profile);
+        
+        if (profile) {
+            console.log('Calling populateStudentProfile with:', profile);
+            populateStudentProfile(profile);
+            console.log('populateStudentProfile completed');
+        } else {
+            console.log('No student profile data received from API');
+        }
+        
         // Load instruments for filtering
         const instruments = await apiCall('/students/instruments');
         populateInstrumentFilter(instruments);
@@ -2105,15 +2141,23 @@ async function loadStudentData() {
 function populateStudentProfile(profile) {
     document.getElementById('studentName').value = profile.name || '';
     document.getElementById('studentProfileEmail').value = profile.email || '';
-    document.getElementById('studentContact').value = profile.contactInfo || '';
     document.getElementById('studentPayment').value = profile.paymentInfo || '';
     
-    // Handle instrument - select the saved instrument
-    if (profile.instrument) {
-        const instrumentRadio = document.querySelector(`input[name="studentProfileInstrument"][value="${profile.instrument}"]`);
-        if (instrumentRadio) {
-            instrumentRadio.checked = true;
-        }
+    // Store the user's name for navigation display
+    if (profile.name) {
+        userDisplayName = profile.name;
+        updateNavigation(); // Update navigation with the actual name
+    }
+    
+    // Handle multiple instruments - split comma-separated string and check boxes
+    if (profile.instruments) {
+        const instruments = profile.instruments.split(',').map(inst => inst.trim());
+        instruments.forEach(instrument => {
+            const instrumentCheckbox = document.querySelector(`input[name="studentProfileInstruments"][value="${instrument}"]`);
+            if (instrumentCheckbox) {
+                instrumentCheckbox.checked = true;
+            }
+        });
     }
     
     // Handle level
@@ -2127,21 +2171,20 @@ async function handleStudentProfile(event) {
     
     const name = document.getElementById('studentName').value;
     const email = document.getElementById('studentProfileEmail').value;
-    const contact = document.getElementById('studentContact').value;
     const payment = document.getElementById('studentPayment').value;
     
-    // Get selected instrument (radio button)
-    const selectedInstrument = document.querySelector('input[name="studentProfileInstrument"]:checked');
-    const instrument = selectedInstrument ? selectedInstrument.value : '';
+    // Get selected instruments (checkboxes)
+    const selectedInstruments = Array.from(document.querySelectorAll('input[name="studentProfileInstruments"]:checked'))
+        .map(checkbox => checkbox.value);
+    const instruments = selectedInstruments.join(', ');
     const level = document.getElementById('studentLevel').value;
     
     try {
         await apiCall('/students/profile', 'POST', {
             name,
             email,
-            contactInfo: contact,
             paymentInfo: payment,
-            instrument,
+            instruments,
             level
         });
         
@@ -2171,9 +2214,20 @@ function populateInstrumentFilter(instruments) {
 
 async function loadTeachers(instrumentId = null) {
     try {
+        console.log('=== LOAD TEACHERS DEBUG ===');
+        console.log('Loading teachers from /teachers/all endpoint...');
+        
         // Use the correct API endpoint
         const teachers = await apiCall('/teachers/all');
+        console.log('Teachers loaded from API:', teachers);
+        console.log('Number of teachers:', teachers ? teachers.length : 0);
+        
+        if (teachers && teachers.length > 0) {
+            console.log('First teacher:', teachers[0]);
+        }
+        
         populateTeachersList(teachers, instrumentId);
+        console.log('=== LOAD TEACHERS DEBUG END ===');
     } catch (error) {
         console.error('Error loading teachers:', error);
         alert('Failed to load teachers. Please try again.');
@@ -2181,17 +2235,30 @@ async function loadTeachers(instrumentId = null) {
 }
 
 function populateTeachersList(teachers, instrumentFilter = null) {
+    console.log('=== POPULATE TEACHERS LIST DEBUG ===');
+    console.log('Teachers received:', teachers);
+    console.log('Teachers type:', typeof teachers);
+    console.log('Teachers length:', teachers ? teachers.length : 'null/undefined');
+    console.log('Instrument filter:', instrumentFilter);
+    
     const container = document.getElementById('teachersList');
     const guestContainer = document.getElementById('guestTeachersList');
     
+    console.log('Container found:', !!container);
+    console.log('Guest container found:', !!guestContainer);
+    
     [container, guestContainer].forEach(target => {
         if (target) {
+            console.log('Clearing target container...');
             target.innerHTML = '';
             
             if (!teachers || teachers.length === 0) {
+                console.log('No teachers found, showing empty message');
                 target.innerHTML = '<p class="text-muted">No teachers found.</p>';
                 return;
             }
+            
+            console.log(`Processing ${teachers.length} teachers...`);
             
             // Filter teachers by instrument if specified
             let filteredTeachers = teachers;
@@ -2206,36 +2273,55 @@ function populateTeachersList(teachers, instrumentFilter = null) {
             }
             
             if (filteredTeachers.length === 0) {
+                console.log('No teachers match the filter');
                 target.innerHTML = '<p class="text-muted">No teachers found for the selected instrument.</p>';
                 return;
             }
             
+            console.log(`Displaying ${filteredTeachers.length} filtered teachers`);
+            
             filteredTeachers.forEach((teacher, index) => {
+                console.log(`Processing teacher ${index + 1}:`, teacher);
+                
                 const div = document.createElement('div');
                 div.className = 'teacher-card';
                 
-                // Get teacher's instruments
-                const instruments = teacher.Instruments ? 
-                    teacher.Instruments.map(inst => inst.Name).join(', ') : 
+                // Get teacher's instruments - handle both cases
+                const instruments = (teacher.Instruments || teacher.instruments) ? 
+                    (teacher.Instruments || teacher.instruments).map(inst => inst.Name || inst.name).join(', ') : 
                     'Not specified';
                 
-                // Get teacher's bio/description
-                const bio = teacher.Bio || 'No description available';
+                // Get teacher's bio/description - handle both cases
+                const bio = teacher.Bio || teacher.bio || 'No description available';
                 
-                // Get teacher's rate
-                const rate = teacher.DefaultLessonCost || 'Contact for pricing';
+                // Get teacher's rate - handle both cases
+                const rate = teacher.DefaultLessonCost || teacher.defaultLessonCost || 'Contact for pricing';
+                
+                // Get teacher's name - handle both cases
+                const teacherName = teacher.Name || teacher.name || teacher.Username || teacher.username || 'Teacher';
+                
+                // Get teacher's contact - handle both cases
+                const contact = teacher.ContactInfo || teacher.contactInfo || teacher.Email || teacher.email || 'Not provided';
+                
+                console.log(`Teacher ${index + 1} data:`, {
+                    name: teacherName,
+                    bio: bio,
+                    rate: rate,
+                    instruments: instruments,
+                    contact: contact
+                });
                 
                 div.innerHTML = `
                     <div class="row">
                         <div class="col-md-8">
-                            <h5>${teacher.Name || teacher.Username || 'Teacher'}</h5>
+                            <h5>${teacherName}</h5>
                             <p class="text-muted">${bio}</p>
                             <p><strong>Rate:</strong> $${rate}/lesson</p>
                             <p><strong>Instruments:</strong> ${instruments}</p>
-                            <p><strong>Contact:</strong> ${teacher.ContactInfo || 'Not provided'}</p>
+                            <p><strong>Contact:</strong> ${contact}</p>
                         </div>
                         <div class="col-md-4 text-end">
-                            <button class="btn btn-primary" onclick="viewTeacherAvailability(${teacher.Id})">
+                            <button class="btn btn-primary" onclick="viewTeacherAvailability(${teacher.Id || teacher.id})">
                                 View Availability
                             </button>
                         </div>
@@ -2245,6 +2331,8 @@ function populateTeachersList(teachers, instrumentFilter = null) {
             });
         }
     });
+    
+    console.log('=== POPULATE TEACHERS LIST DEBUG END ===');
 }
 
 async function loadGuestTeachers() {
