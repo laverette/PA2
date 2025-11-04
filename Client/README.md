@@ -2,6 +2,27 @@
 
 A full-stack web application that connects music teachers with students for private music lessons. Built with .NET API backend, SQLite database, and Bootstrap frontend.
 
+## Quick Start
+
+### Setup and Run
+
+1. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Start the Application:**
+   ```bash
+   npm start
+   ```
+   This will start both the frontend server (http://localhost:8080) and the backend API (http://localhost:5000).
+
+3. **Login:**
+   - Open your browser to `http://localhost:8080`
+   - **Admin Login:** username: `admin`, password: `password123`
+   - Teacher Login: username: `teacher1`, password: `password123`
+   - Student Login: username: `student1`, password: `password123`
+
 ## Project Overview
 
 Freelance Music (FM) is a platform where teachers offer music lessons and students book them. The platform takes a small percentage of each lesson booking fee for providing the service.
