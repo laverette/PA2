@@ -2366,18 +2366,157 @@ function filterTeachersByInstrument() {
 
 async function viewTeacherAvailability(teacherId) {
     try {
-        const availability = await apiCall(`/students/availability/${teacherId}`);
-        showBookingModal(teacherId, availability);
+        const availability = await apiCall(`/teachers/${teacherId}/availability`);
+        // Get teacher info from the teachers list
+        const teachers = await apiCall('/teachers/all');
+        const teacher = teachers.find(t => (t.Id || t.id) === teacherId);
+        await showBookingModal(teacherId, teacher, availability);
     } catch (error) {
         console.error('Error loading teacher availability:', error);
         alert('Failed to load availability. Please try again.');
     }
 }
 
-function showBookingModal(teacherId, availability) {
-    // This would show a modal for booking
-    // For now, we'll just show an alert
-    alert(`Teacher ${teacherId} has ${availability.length} available slots. Booking functionality would be implemented here.`);
+async function showBookingModal(teacherId, teacher, availability) {
+    const modal = new bootstrap.Modal(document.getElementById('bookingModal'));
+    const content = document.getElementById('bookingModalContent');
+    
+    // Get student profile data
+    let studentProfile = null;
+    try {
+        studentProfile = await apiCall('/students/my-profile');
+    } catch (error) {
+        console.error('Error loading student profile:', error);
+    }
+    
+    const teacherName = teacher?.Name || teacher?.name || 'Teacher';
+    
+    if (!availability || availability.length === 0) {
+        content.innerHTML = `
+            <div class="alert alert-info">
+                <h6>${teacherName}</h6>
+                <p class="mb-0">No available time slots at the moment. Please check back later!</p>
+            </div>
+        `;
+        modal.show();
+        return;
+    }
+    
+    // Format and display availability slots
+    let slotsHTML = `
+        <div class="mb-3">
+            <h6>${teacherName}</h6>
+            <p class="text-muted mb-3">Select a time slot to book a lesson:</p>
+        </div>
+        <div class="list-group">
+    `;
+    
+    availability.forEach(slot => {
+        const date = new Date(slot.Date);
+        const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+        const cost = slot.Cost || slot.cost || 'Contact for pricing';
+        const isVirtual = slot.IsVirtual || slot.isVirtual ? 'Virtual' : 'In-Person';
+        const notes = slot.Notes || slot.notes || '';
+        
+        slotsHTML += `
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">${dateStr}</h6>
+                        <p class="mb-1">
+                            <strong>Time:</strong> ${slot.StartTime || slot.startTime} - ${slot.EndTime || slot.endTime}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Type:</strong> ${isVirtual} | 
+                            <strong>Cost:</strong> $${cost}
+                        </p>
+                        ${notes ? `<p class="mb-1 text-muted"><small>${notes}</small></p>` : ''}
+                    </div>
+                    <button class="btn btn-primary" onclick="bookLesson(${teacherId}, ${slot.Id || slot.id}, ${JSON.stringify(teacherName)}, ${JSON.stringify(slot.Date || slot.date)}, ${JSON.stringify(slot.StartTime || slot.startTime)}, ${JSON.stringify(slot.EndTime || slot.endTime)}, ${cost}, ${slot.IsVirtual || slot.isVirtual ? 'true' : 'false'})">
+                        Book This Slot
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    slotsHTML += `
+        </div>
+        ${studentProfile ? '' : '<div class="alert alert-warning mt-3"><small>Please complete your student profile before booking.</small></div>'}
+    `;
+    
+    content.innerHTML = slotsHTML;
+    modal.show();
+}
+
+async function bookLesson(teacherId, availabilitySlotId, teacherName, lessonDate, startTime, endTime, cost, isVirtual) {
+    try {
+        // Get student profile to get name and instrument
+        const studentProfile = await apiCall('/students/my-profile');
+        
+        if (!studentProfile || !studentProfile.name) {
+            alert('Please complete your student profile before booking a lesson.');
+            return;
+        }
+        
+        // Get student's first instrument (or prompt for one)
+        const instruments = studentProfile.instruments ? studentProfile.instruments.split(',').map(i => i.trim()) : [];
+        if (instruments.length === 0) {
+            alert('Please add at least one instrument to your profile before booking.');
+            return;
+        }
+        
+        // For now, use the first instrument. In the future, could prompt user to select
+        const instrument = instruments[0];
+        
+        // Format date for display
+        const dateObj = new Date(lessonDate);
+        const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+        
+        // Confirm booking
+        const confirmMessage = `Book lesson with ${teacherName || 'teacher'}?\n\n` +
+            `Date: ${dateStr}\n` +
+            `Time: ${startTime} - ${endTime}\n` +
+            `Instrument: ${instrument}\n` +
+            `Type: ${isVirtual ? 'Virtual' : 'In-Person'}\n` +
+            `Cost: $${cost}\n\n` +
+            `Confirm booking?`;
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        
+        // Call booking API
+        const bookingData = {
+            teacherId: teacherId,
+            availabilitySlotId: availabilitySlotId,
+            studentName: studentProfile.name,
+            instrument: instrument,
+            lessonDate: lessonDate,
+            startTime: startTime,
+            endTime: endTime,
+            lessonType: isVirtual ? 'Virtual' : 'In-Person',
+            cost: cost,
+            notes: ''
+        };
+        
+        const result = await apiCall('/students/book-lesson', 'POST', bookingData);
+        
+        alert('Lesson booked successfully! The teacher will confirm your booking.');
+        
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Optionally reload student data to show the new booking
+        // loadStudentData();
+        
+    } catch (error) {
+        console.error('Error booking lesson:', error);
+        alert('Failed to book lesson: ' + (error.message || 'Unknown error'));
+    }
 }
 
 function populateStudentBookings(bookings) {

@@ -558,6 +558,40 @@ app.MapGet("/api/teachers/availability", (HttpContext context) =>
     }
 });
 
+// Endpoint for students to view a specific teacher's availability
+app.MapGet("/api/teachers/{teacherId}/availability", (int teacherId, HttpContext context) =>
+{
+    try
+    {
+        var userId = GetUserIdFromToken(context);
+        if (userId == null) return Results.Unauthorized();
+
+        using var conn = new SqliteConnection(connectionString);
+        
+        // Verify the teacher exists
+        var teacherProfile = conn.QueryFirstOrDefault(@"
+            SELECT Id FROM Teachers WHERE Id = @TeacherId", new { TeacherId = teacherId });
+        
+        if (teacherProfile == null)
+        {
+            return Results.NotFound(new { message = "Teacher not found" });
+        }
+
+        var availability = conn.Query(@"
+            SELECT Id, Date, StartTime, EndTime, IsVirtual, Cost, Notes
+            FROM AvailabilitySlots 
+            WHERE TeacherId = @TeacherId
+            ORDER BY Date, StartTime",
+            new { TeacherId = teacherId });
+
+        return Results.Ok(availability);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { message = "Failed to load availability: " + ex.Message });
+    }
+});
+
 app.MapPost("/api/teachers/availability", async (HttpContext context) =>
 {
     try
@@ -1170,6 +1204,87 @@ app.MapGet("/api/students/my-profile", (HttpContext context) =>
     }
 });
 
+// Student booking endpoint
+app.MapPost("/api/students/book-lesson", async (HttpContext context) =>
+{
+    try
+    {
+        var userId = GetUserIdFromToken(context);
+        if (userId == null)
+        {
+            return Results.Unauthorized();
+        }
+        
+        var request = await context.Request.ReadFromJsonAsync<BookLessonRequest>();
+        if (request == null)
+        {
+            return Results.BadRequest(new { message = "Invalid request data" });
+        }
+        
+        using var conn = new SqliteConnection(connectionString);
+        
+        // Verify the teacher exists
+        var teacher = conn.QueryFirstOrDefault(@"
+            SELECT Id FROM Teachers WHERE Id = @TeacherId", 
+            new { TeacherId = request.TeacherId });
+        
+        if (teacher == null)
+        {
+            return Results.BadRequest(new { message = "Teacher not found" });
+        }
+        
+        // Verify the availability slot exists and belongs to the teacher
+        var availabilitySlot = conn.QueryFirstOrDefault(@"
+            SELECT Id, Date, StartTime, EndTime, Cost, IsVirtual 
+            FROM AvailabilitySlots 
+            WHERE Id = @SlotId AND TeacherId = @TeacherId",
+            new { SlotId = request.AvailabilitySlotId, TeacherId = request.TeacherId });
+        
+        if (availabilitySlot == null)
+        {
+            return Results.BadRequest(new { message = "Availability slot not found or doesn't belong to this teacher" });
+        }
+        
+        // Get student profile to get StudentId
+        var studentProfile = conn.QueryFirstOrDefault(@"
+            SELECT Id FROM Students WHERE UserId = @UserId",
+            new { UserId = userId });
+        
+        int? studentId = studentProfile?.Id;
+        
+        // Create the lesson booking
+        var lessonId = (int)conn.ExecuteScalar<long>(@"
+            INSERT INTO Lessons (TeacherId, StudentId, StudentName, Instrument, LessonDate, StartTime, EndTime, 
+                                LessonType, TotalCost, Status, Notes)
+            VALUES (@TeacherId, @StudentId, @StudentName, @Instrument, @LessonDate, @StartTime, @EndTime, 
+                    @LessonType, @TotalCost, @Status, @Notes);
+            SELECT last_insert_rowid();",
+            new { 
+                TeacherId = request.TeacherId,
+                StudentId = studentId,
+                StudentName = request.StudentName ?? "",
+                Instrument = request.Instrument ?? "",
+                LessonDate = request.LessonDate ?? "",
+                StartTime = request.StartTime ?? "",
+                EndTime = request.EndTime ?? "",
+                LessonType = request.LessonType ?? "",
+                TotalCost = request.Cost,
+                Status = "Pending",
+                Notes = request.Notes ?? ""
+            });
+        
+        // Mark the availability slot as unavailable (optional - you might want to keep it available for other bookings)
+        // For now, we'll leave it available in case the teacher wants to reuse it
+        
+        return Results.Ok(new { message = "Lesson booked successfully", lessonId = lessonId });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error booking lesson: {ex.Message}");
+        return Results.BadRequest(new { message = "Failed to book lesson: " + ex.Message });
+    }
+});
+
 app.Run();
 
 // Request/Response models
@@ -1178,3 +1293,4 @@ public record RegisterRequest(string Email, string Password, string Role, string
 public record AvailabilityRequest(string? Date, string? StartTime, string? EndTime, bool IsVirtual, decimal Cost, string? Notes);
 public record ScheduleLessonRequest(string? StudentName, string? Instrument, string? LessonDate, string? LessonTime, int Duration, string? LessonType, decimal Cost, string? Notes);
 public record StudentProfileRequest(string Name, string Email, string PaymentInfo, string Instruments, string Level);
+public record BookLessonRequest(int TeacherId, int AvailabilitySlotId, string StudentName, string Instrument, string LessonDate, string StartTime, string EndTime, string LessonType, decimal Cost, string? Notes);
