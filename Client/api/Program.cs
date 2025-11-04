@@ -258,23 +258,27 @@ app.MapGet("/api/teachers/my-lessons", (HttpContext context) =>
         var teacher = conn.QueryFirstOrDefault("SELECT Id FROM Teachers WHERE UserId = @UserId", new { UserId = userId });
         if (teacher == null) return Results.NotFound(new { message = "Teacher profile not found" });
 
-        // Get lessons for this teacher
+        // Get lessons for this teacher with student information
         var lessons = conn.Query(@"
             SELECT 
-                Id,
-                StudentName,
-                Instrument,
-                LessonDate,
-                StartTime,
-                EndTime,
-                LessonType,
-                TotalCost,
-                Status,
-                Notes
-            FROM Lessons 
-            WHERE TeacherId = @TeacherId
-            ORDER BY LessonDate DESC, StartTime DESC
-        ", new { TeacherId = teacher.Id }).ToList();
+                l.Id,
+                l.StudentId,
+                l.StudentName,
+                l.Instrument,
+                l.LessonDate,
+                l.StartTime,
+                l.EndTime,
+                l.LessonType,
+                l.TotalCost,
+                l.Status,
+                l.Notes,
+                s.Email as StudentEmail,
+                s.Level as StudentLevel
+            FROM Lessons l
+            LEFT JOIN Students s ON l.StudentId = s.Id
+            WHERE l.TeacherId = @TeacherId
+            ORDER BY l.LessonDate DESC, l.StartTime DESC
+        ", new { TeacherId = (int)(long)teacher.Id }).ToList();
 
         return Results.Ok(lessons);
     }
@@ -1246,11 +1250,15 @@ app.MapPost("/api/students/book-lesson", async (HttpContext context) =>
         }
         
         // Get student profile to get StudentId
-        var studentProfile = conn.QueryFirstOrDefault(@"
+        var studentProfile = conn.QueryFirstOrDefault<dynamic>(@"
             SELECT Id FROM Students WHERE UserId = @UserId",
             new { UserId = userId });
         
-        int? studentId = studentProfile?.Id;
+        int? studentId = null;
+        if (studentProfile != null && studentProfile.Id != null)
+        {
+            studentId = (int)(long)studentProfile.Id;
+        }
         
         // Create the lesson booking
         var lessonId = (int)conn.ExecuteScalar<long>(@"
@@ -1269,7 +1277,7 @@ app.MapPost("/api/students/book-lesson", async (HttpContext context) =>
                 EndTime = request.EndTime ?? "",
                 LessonType = request.LessonType ?? "",
                 TotalCost = request.Cost,
-                Status = "Pending",
+                Status = "Confirmed",
                 Notes = request.Notes ?? ""
             });
         
@@ -1282,6 +1290,62 @@ app.MapPost("/api/students/book-lesson", async (HttpContext context) =>
     {
         Console.WriteLine($"Error booking lesson: {ex.Message}");
         return Results.BadRequest(new { message = "Failed to book lesson: " + ex.Message });
+    }
+});
+
+// Get student bookings endpoint
+app.MapGet("/api/students/my-bookings", (HttpContext context) =>
+{
+    try
+    {
+        var userId = GetUserIdFromToken(context);
+        if (userId == null)
+        {
+            return Results.Unauthorized();
+        }
+        
+        using var conn = new SqliteConnection(connectionString);
+        
+        // Get student profile
+        var student = conn.QueryFirstOrDefault<dynamic>(@"
+            SELECT Id FROM Students WHERE UserId = @UserId",
+            new { UserId = userId });
+        
+        if (student == null)
+        {
+            return Results.Ok(new object[0]);
+        }
+        
+        int studentId = (int)(long)student.Id;
+        
+        // Get all bookings for this student
+        var bookings = conn.Query(@"
+            SELECT 
+                l.Id,
+                l.TeacherId,
+                l.StudentName,
+                l.Instrument,
+                l.LessonDate,
+                l.StartTime,
+                l.EndTime,
+                l.LessonType,
+                l.TotalCost,
+                l.Status,
+                l.Notes,
+                t.Name as TeacherName,
+                t.Email as TeacherEmail
+            FROM Lessons l
+            INNER JOIN Teachers t ON l.TeacherId = t.Id
+            WHERE l.StudentId = @StudentId
+            ORDER BY l.LessonDate DESC, l.StartTime DESC
+        ", new { StudentId = studentId }).ToList();
+        
+        return Results.Ok(bookings);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error loading student bookings: {ex.Message}");
+        return Results.BadRequest(new { message = "Failed to load bookings: " + ex.Message });
     }
 });
 

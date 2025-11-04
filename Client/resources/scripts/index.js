@@ -752,7 +752,25 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     
     if (!response.ok) {
         console.error('API call failed with status:', response.status);
-        throw new Error(`API call failed: ${response.status}`);
+        
+        // Try to get error message from response
+        let errorMessage = `API call failed: ${response.status}`;
+        let errorData = null;
+        try {
+            errorData = await response.json();
+            console.error('Error response data:', errorData);
+            if (errorData.message) {
+                errorMessage = errorData.message;
+            }
+        } catch (e) {
+            // If JSON parsing fails, use status text
+            errorMessage = response.statusText || errorMessage;
+        }
+        
+        const error = new Error(errorMessage);
+        error.status = response.status;
+        error.response = errorData;
+        throw error;
     }
     
     const data = await response.json();
@@ -1917,9 +1935,11 @@ function populateAvailabilityList(availability) {
 
 function populateTeacherLessons(lessons) {
     const container = document.getElementById('teacherLessonsList');
+    if (!container) return;
+    
     container.innerHTML = '';
     
-    if (lessons.length === 0) {
+    if (!lessons || lessons.length === 0) {
         container.innerHTML = '<p class="text-muted">No lessons booked.</p>';
         return;
     }
@@ -1930,48 +1950,55 @@ function populateTeacherLessons(lessons) {
     lessons.forEach(lesson => {
         const div = document.createElement('div');
         div.className = 'card booking-card mb-3 lesson-item';
-        div.setAttribute('data-student', (lesson.Student?.Name || lesson.student?.name || '').toLowerCase());
-        div.setAttribute('data-instrument', (lesson.Instrument?.Name || lesson.instrument?.name || '').toLowerCase());
-        div.setAttribute('data-status', lesson.Status || lesson.status);
         
-        const status = lesson.Status || lesson.status;
+        const studentName = lesson.StudentName || lesson.studentName || 'Unknown Student';
+        const instrument = lesson.Instrument || lesson.instrument || 'Unknown Instrument';
+        const status = lesson.Status || lesson.status || 'Confirmed';
+        const lessonId = lesson.Id || lesson.id;
+        
+        div.setAttribute('data-student', studentName.toLowerCase());
+        div.setAttribute('data-instrument', instrument.toLowerCase());
+        div.setAttribute('data-status', status);
+        
         const statusColor = status === 'Completed' ? 'success' : 
-                           status === 'Confirmed' ? 'primary' : 
+                           status === 'Confirmed' ? 'info' : 
                            status === 'Pending' ? 'warning' : 'secondary';
+        
+        const date = new Date(lesson.LessonDate || lesson.lessonDate);
+        const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+        const startTime = lesson.StartTime || lesson.startTime || '';
+        const endTime = lesson.EndTime || lesson.endTime || '';
+        const lessonType = lesson.LessonType || lesson.lessonType || 'In-Person';
+        const cost = lesson.TotalCost || lesson.totalCost || 0;
+        const studentEmail = lesson.StudentEmail || lesson.studentEmail || 'N/A';
+        const studentLevel = lesson.StudentLevel || lesson.studentLevel || 'N/A';
         
         div.innerHTML = `
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-8">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h6 class="mb-0">${lesson.Student?.Name || lesson.student?.name || 'Unknown Student'}</h6>
+                            <h6 class="mb-0">${studentName}</h6>
                             <span class="badge bg-${statusColor}">${status}</span>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
-                                <p class="mb-1"><i class="bi bi-music-note"></i> <strong>Instrument:</strong> ${lesson.Instrument?.Name || lesson.instrument?.name || 'Unknown Instrument'}</p>
-                                <p class="mb-1"><i class="bi bi-person"></i> <strong>Type:</strong> ${lesson.LessonType || lesson.lessonType}</p>
-                                <p class="mb-1"><i class="bi bi-envelope"></i> <strong>Contact:</strong> ${lesson.Student?.ContactInfo || lesson.student?.contactInfo || 'N/A'}</p>
+                                <p class="mb-1"><i class="bi bi-music-note"></i> <strong>Instrument:</strong> ${instrument}</p>
+                                <p class="mb-1"><i class="bi bi-person"></i> <strong>Type:</strong> ${lessonType}</p>
+                                <p class="mb-1"><i class="bi bi-envelope"></i> <strong>Email:</strong> ${studentEmail}</p>
+                                <p class="mb-1"><i class="bi bi-star"></i> <strong>Level:</strong> ${studentLevel}</p>
                             </div>
                             <div class="col-md-6">
-                                <p class="mb-1"><i class="bi bi-calendar"></i> <strong>Date:</strong> ${new Date(lesson.AvailabilitySlot?.Date || lesson.availabilitySlot?.date || lesson.LessonDate || lesson.lessonDate).toLocaleDateString()}</p>
-                                <p class="mb-1"><i class="bi bi-clock"></i> <strong>Time:</strong> ${formatTime12Hour(lesson.AvailabilitySlot?.StartTime || lesson.availabilitySlot?.startTime || lesson.StartTime || lesson.startTime)} - ${formatTime12Hour(lesson.AvailabilitySlot?.EndTime || lesson.availabilitySlot?.endTime || lesson.EndTime || lesson.endTime)}</p>
-                                <p class="mb-1"><i class="bi bi-currency-dollar"></i> <strong>Cost:</strong> $${lesson.TotalCost || lesson.totalCost}</p>
+                                <p class="mb-1"><i class="bi bi-calendar"></i> <strong>Date:</strong> ${dateStr}</p>
+                                <p class="mb-1"><i class="bi bi-clock"></i> <strong>Time:</strong> ${startTime} - ${endTime}</p>
+                                <p class="mb-1"><i class="bi bi-currency-dollar"></i> <strong>Cost:</strong> $${cost}</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="d-flex flex-column gap-2">
-                            <button class="btn btn-outline-primary btn-sm" onclick="viewLessonDetails(${lesson.id})">
-                                <i class="bi bi-eye"></i> View Details
-                            </button>
-                            ${lesson.status === 'Pending' ? `
-                                <button class="btn btn-success btn-sm" onclick="confirmLesson(${lesson.id})">
-                                    <i class="bi bi-check"></i> Confirm
-                                </button>
-                            ` : ''}
-                            ${lesson.status === 'Confirmed' ? `
-                                <button class="btn btn-warning btn-sm" onclick="markCompleted(${lesson.id})">
+                            ${status === 'Confirmed' ? `
+                                <button class="btn btn-warning btn-sm" onclick="markCompleted(${lessonId})">
                                     <i class="bi bi-check-circle"></i> Mark Complete
                                 </button>
                             ` : ''}
@@ -2130,6 +2157,14 @@ async function loadStudentData() {
         
         // Load teachers
         await loadTeachers();
+        
+        // Load student bookings
+        try {
+            const bookings = await apiCall('/students/my-bookings');
+            populateStudentBookings(bookings);
+        } catch (error) {
+            console.error('Error loading student bookings:', error);
+        }
         
     } catch (error) {
         console.error('Error loading student data:', error);
@@ -2411,10 +2446,11 @@ async function showBookingModal(teacherId, teacher, availability) {
         <div class="list-group">
     `;
     
-    availability.forEach(slot => {
+    availability.forEach((slot, index) => {
         const date = new Date(slot.Date);
         const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
-        const cost = slot.Cost || slot.cost || 'Contact for pricing';
+        const cost = slot.Cost || slot.cost || 0;
+        const costDisplay = cost && cost !== 0 ? `$${cost}` : 'Contact for pricing';
         const isVirtual = slot.IsVirtual || slot.isVirtual ? 'Virtual' : 'In-Person';
         const notes = slot.Notes || slot.notes || '';
         
@@ -2428,11 +2464,19 @@ async function showBookingModal(teacherId, teacher, availability) {
                         </p>
                         <p class="mb-1">
                             <strong>Type:</strong> ${isVirtual} | 
-                            <strong>Cost:</strong> $${cost}
+                            <strong>Cost:</strong> ${costDisplay}
                         </p>
                         ${notes ? `<p class="mb-1 text-muted"><small>${notes}</small></p>` : ''}
                     </div>
-                    <button class="btn btn-primary" onclick="bookLesson(${teacherId}, ${slot.Id || slot.id}, ${JSON.stringify(teacherName)}, ${JSON.stringify(slot.Date || slot.date)}, ${JSON.stringify(slot.StartTime || slot.startTime)}, ${JSON.stringify(slot.EndTime || slot.endTime)}, ${cost}, ${slot.IsVirtual || slot.isVirtual ? 'true' : 'false'})">
+                    <button class="btn btn-primary book-slot-btn" 
+                            data-teacher-id="${teacherId}" 
+                            data-slot-id="${slot.Id || slot.id}" 
+                            data-teacher-name="${(teacherName || '').replace(/"/g, '&quot;')}" 
+                            data-lesson-date="${slot.Date || slot.date}" 
+                            data-start-time="${slot.StartTime || slot.startTime}" 
+                            data-end-time="${slot.EndTime || slot.endTime}" 
+                            data-cost="${cost || 0}" 
+                            data-is-virtual="${slot.IsVirtual || slot.isVirtual ? 'true' : 'false'}">
                         Book This Slot
                     </button>
                 </div>
@@ -2446,6 +2490,23 @@ async function showBookingModal(teacherId, teacher, availability) {
     `;
     
     content.innerHTML = slotsHTML;
+    
+    // Attach event listeners to all booking buttons
+    content.querySelectorAll('.book-slot-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const teacherId = parseInt(this.getAttribute('data-teacher-id'));
+            const slotId = parseInt(this.getAttribute('data-slot-id'));
+            const teacherName = this.getAttribute('data-teacher-name');
+            const lessonDate = this.getAttribute('data-lesson-date');
+            const startTime = this.getAttribute('data-start-time');
+            const endTime = this.getAttribute('data-end-time');
+            const cost = parseFloat(this.getAttribute('data-cost'));
+            const isVirtual = this.getAttribute('data-is-virtual') === 'true';
+            
+            bookLesson(teacherId, slotId, teacherName, lessonDate, startTime, endTime, cost, isVirtual);
+        });
+    });
+    
     modal.show();
 }
 
@@ -2486,23 +2547,24 @@ async function bookLesson(teacherId, availabilitySlotId, teacherName, lessonDate
             return;
         }
         
-        // Call booking API
+        // Call booking API - match backend property names exactly
         const bookingData = {
-            teacherId: teacherId,
-            availabilitySlotId: availabilitySlotId,
-            studentName: studentProfile.name,
-            instrument: instrument,
-            lessonDate: lessonDate,
-            startTime: startTime,
-            endTime: endTime,
-            lessonType: isVirtual ? 'Virtual' : 'In-Person',
-            cost: cost,
-            notes: ''
+            TeacherId: teacherId,
+            AvailabilitySlotId: availabilitySlotId,
+            StudentName: studentProfile.name,
+            Instrument: instrument,
+            LessonDate: lessonDate,
+            StartTime: startTime,
+            EndTime: endTime,
+            LessonType: isVirtual ? 'Virtual' : 'In-Person',
+            Cost: cost && !isNaN(cost) ? cost : 0,
+            Notes: ''
         };
         
+        console.log('Booking data being sent:', bookingData);
         const result = await apiCall('/students/book-lesson', 'POST', bookingData);
         
-        alert('Lesson booked successfully! The teacher will confirm your booking.');
+        alert('Lesson booked successfully!');
         
         // Close the modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
@@ -2510,20 +2572,36 @@ async function bookLesson(teacherId, availabilitySlotId, teacherName, lessonDate
             modal.hide();
         }
         
-        // Optionally reload student data to show the new booking
-        // loadStudentData();
+        // Reload student data to show the new booking
+        await loadStudentData();
         
     } catch (error) {
         console.error('Error booking lesson:', error);
-        alert('Failed to book lesson: ' + (error.message || 'Unknown error'));
+        console.error('Error details:', error);
+        
+        // Get detailed error message
+        let errorMessage = 'Failed to book lesson. ';
+        if (error.message && error.message !== `API call failed: ${error.status}`) {
+            errorMessage += error.message;
+        } else if (error.response && error.response.message) {
+            errorMessage += error.response.message;
+        } else if (error.message) {
+            errorMessage += error.message;
+        } else {
+            errorMessage += 'Please check the console for details.';
+        }
+        
+        alert(errorMessage);
     }
 }
 
 function populateStudentBookings(bookings) {
     const container = document.getElementById('studentBookingsList');
+    if (!container) return;
+    
     container.innerHTML = '';
     
-    if (bookings.length === 0) {
+    if (!bookings || bookings.length === 0) {
         container.innerHTML = '<p class="text-muted">No bookings found.</p>';
         return;
     }
@@ -2531,25 +2609,43 @@ function populateStudentBookings(bookings) {
     bookings.forEach(booking => {
         const div = document.createElement('div');
         div.className = 'card booking-card mb-3';
+        
+        const date = new Date(booking.LessonDate || booking.lessonDate);
+        const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+        const teacherName = booking.TeacherName || booking.teacherName || 'Teacher';
+        const instrument = booking.Instrument || booking.instrument || 'Not specified';
+        const lessonType = booking.LessonType || booking.lessonType || 'In-Person';
+        const startTime = booking.StartTime || booking.startTime || '';
+        const endTime = booking.EndTime || booking.endTime || '';
+        const cost = booking.TotalCost || booking.totalCost || 0;
+        const status = booking.Status || booking.status || 'Confirmed';
+        const bookingId = booking.Id || booking.id;
+        
+        let statusBadgeClass = 'secondary';
+        if (status === 'Completed') {
+            statusBadgeClass = 'success';
+        } else if (status === 'Confirmed') {
+            statusBadgeClass = 'info';
+        } else if (status === 'Pending') {
+            statusBadgeClass = 'warning';
+        }
+        
         div.innerHTML = `
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <h6>${booking.teacher.name}</h6>
-                        <p class="mb-1"><strong>Instrument:</strong> ${booking.instrument.name}</p>
-                        <p class="mb-1"><strong>Type:</strong> ${booking.lessonType}</p>
+                        <h6>${teacherName}</h6>
+                        <p class="mb-1"><strong>Instrument:</strong> ${instrument}</p>
+                        <p class="mb-1"><strong>Type:</strong> ${lessonType}</p>
                     </div>
                     <div class="col-md-6">
-                        <p class="mb-1"><strong>Date:</strong> ${new Date(booking.availabilitySlot.date).toLocaleDateString()}</p>
-                        <p class="mb-1"><strong>Time:</strong> ${booking.availabilitySlot.startTime} - ${booking.availabilitySlot.endTime}</p>
-                        <p class="mb-1"><strong>Cost:</strong> $${booking.totalCost}</p>
+                        <p class="mb-1"><strong>Date:</strong> ${dateStr}</p>
+                        <p class="mb-1"><strong>Time:</strong> ${startTime} - ${endTime}</p>
+                        <p class="mb-1"><strong>Cost:</strong> $${cost}</p>
                     </div>
                 </div>
                 <div class="mt-2">
-                    <span class="badge bg-${booking.status === 'Completed' ? 'success' : 'warning'}">${booking.status}</span>
-                    <button class="btn btn-sm btn-outline-danger ms-2" onclick="cancelBooking(${booking.id})">
-                        Cancel
-                    </button>
+                    <span class="badge bg-${statusBadgeClass}">${status}</span>
                 </div>
             </div>
         `;
